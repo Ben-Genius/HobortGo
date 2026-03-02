@@ -13,7 +13,7 @@ export const Colors = {
     text: '#0F172A',
     background: '#F8FAFC',
     tint: tintColorLight,
-    secondary: '#1E293B',
+    secondary: '#1e4b69', // Deep Teal
     icon: '#64748B',
     tabIconDefault: '#94A3B8',
     tabIconSelected: tintColorLight,
@@ -55,3 +55,10 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+export const AppFonts = {
+  heading: 'Poppins_700Bold',
+  subheading: 'Poppins_600SemiBold',
+  body: 'Manrope_400Regular',
+  bodyMedium: 'Manrope_500Medium',
+  label: 'Manrope_600SemiBold',
+};

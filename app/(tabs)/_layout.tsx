@@ -30,7 +30,7 @@ export default function AdminTabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="home" color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'home' : 'home-outline'} color={color} />,
         }}
       />
       {/* Tab 2 — Scan / Receipt */}
@@ -38,7 +38,7 @@ export default function AdminTabLayout() {
         name="scan/index"
         options={{
           title: 'Scan',
-          tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="qr-code" color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'qr-code' : 'qr-code-outline'} color={color} />,
         }}
       />
       {/* Tab 3 — Shipments */}
@@ -46,7 +46,7 @@ export default function AdminTabLayout() {
         name="shipments/index"
         options={{
           title: 'Shipments',
-          tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="cube" color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'cube' : 'cube-outline'} color={color} />,
         }}
       />
       {/* Tab 4 — Deliveries */}
@@ -54,7 +54,7 @@ export default function AdminTabLayout() {
         name="deliveries/index"
         options={{
           title: 'Deliveries',
-          tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="bicycle" color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'bicycle' : 'bicycle-outline'} color={color} />,
         }}
       />
       {/* Tab 5 — Notifications */}
@@ -62,7 +62,7 @@ export default function AdminTabLayout() {
         name="notifications/index"
         options={{
           title: 'Alerts',
-          tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="notifications" color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'notifications' : 'notifications-outline'} color={color} />,
         }}
       />
 

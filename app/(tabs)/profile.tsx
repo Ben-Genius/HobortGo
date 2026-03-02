@@ -24,7 +24,7 @@ export default function ProfileScreen() {
                 <Text className="text-gray-500">{user?.email || 'admin@hobortgo.com'}</Text>
             </View>
 
-            <View className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <View className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                 <TouchableOpacity className="p-4 border-b border-gray-100 flex-row justify-between items-center">
                     <Text className="text-gray-700 font-medium text-lg">Account Settings</Text>
                     <Text className="text-gray-400">›</Text>

@@ -43,12 +43,12 @@ export default function DeliveryPersonHomeScreen() {
             <TouchableOpacity
                 activeOpacity={1}
                 onPress={() => setExpanded(isExpanded ? null : item.id)}
-                className="bg-slate-50 rounded-3xl mb-4 border border-slate-100 overflow-hidden">
+                className="bg-slate-50 rounded-lg mb-4 border border-slate-100 overflow-hidden">
                 <View className="p-6">
                     <View className="flex-row justify-between items-start mb-4">
                         <View className="flex-row items-center">
                             <View style={{ backgroundColor: cfg.dot }} className="w-2.5 h-2.5 rounded-full mr-3" />
-                            <Text className="text-brand-slate font-black text-lg">{item.trackingId}</Text>
+                            <Text className="text-brand-secondary font-black text-lg">{item.trackingId}</Text>
                         </View>
                         <View style={{ backgroundColor: cfg.bg }} className="px-3 py-1.5 rounded-xl">
                             <Text style={{ color: cfg.text }} className="text-[10px] font-black uppercase tracking-tighter">{item.status}</Text>
@@ -60,7 +60,7 @@ export default function DeliveryPersonHomeScreen() {
                             <View className="w-8 h-8 bg-white rounded-xl items-center justify-center border border-slate-100">
                                 <Ionicons name="person-outline" size={14} color="#64748B" />
                             </View>
-                            <Text className="text-brand-slate font-bold text-sm ml-3">{item.client}</Text>
+                            <Text className="text-brand-secondary font-bold text-sm ml-3">{item.client}</Text>
                         </View>
                         <View className="flex-row items-center">
                             <View className="w-8 h-8 bg-white rounded-xl items-center justify-center border border-slate-100">
@@ -75,21 +75,21 @@ export default function DeliveryPersonHomeScreen() {
                     <View className="px-6 pb-6 pt-2 bg-slate-100/30">
                         <View className="flex-row gap-3">
                             <TouchableOpacity
-                                className="flex-1 bg-brand-slate py-4 rounded-2xl flex-row items-center justify-center gap-2"
+                                className="flex-1 bg-brand-secondary py-4 rounded-lg flex-row items-center justify-center gap-2"
                                 onPress={() => handleNavigate(item.address)}>
                                 <Ionicons name="navigate-outline" size={16} color="white" />
                                 <Text className="text-white font-bold text-sm">Navigate</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                className="flex-1 bg-white py-4 rounded-2xl flex-row items-center justify-center gap-2 border border-slate-200"
+                                className="flex-1 bg-white py-4 rounded-lg flex-row items-center justify-center gap-2 border border-slate-200"
                                 onPress={() => Linking.openURL(`tel:${item.phone}`)}>
-                                <Ionicons name="call-outline" size={16} color="#0F172A" />
-                                <Text className="text-brand-slate font-bold text-sm">Call</Text>
+                                <Ionicons name="call-outline" size={16} color="#1e4b69" />
+                                <Text className="text-brand-secondary font-bold text-sm">Call</Text>
                             </TouchableOpacity>
                         </View>
                         {(item.status === 'Out for Delivery' || item.status === 'Pending') && (
                             <TouchableOpacity
-                                className="mt-3 bg-brand-orange py-4 rounded-2xl flex-row items-center justify-center gap-2"
+                                className="mt-3 bg-brand-orange py-4 rounded-lg flex-row items-center justify-center gap-2"
                                 onPress={() => router.push('/(tabs-delivery)/scan' as any)}>
                                 <Ionicons name="checkmark-circle-outline" size={18} color="white" />
                                 <Text className="text-white font-black uppercase tracking-widest text-sm">Complete Delivery</Text>
@@ -108,26 +108,26 @@ export default function DeliveryPersonHomeScreen() {
                 <View className="flex-row justify-between items-center mb-8">
                     <View>
                         <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest">Courier Pro</Text>
-                        <Text className="text-brand-slate text-3xl font-black mt-1">
+                        <Text className="text-brand-secondary text-3xl font-black mt-1">
                             Hi, <Text className="text-brand-orange">{user?.name?.split(' ')[0] ?? 'Driver'}</Text>
                         </Text>
                     </View>
                     <TouchableOpacity
-                        className="w-12 h-12 bg-slate-50 rounded-2xl items-center justify-center border border-slate-100"
+                        className="w-12 h-12 bg-slate-50 rounded-lg items-center justify-center border border-slate-100"
                         onPress={() => router.push('/(tabs-delivery)/notifications' as any)}>
-                        <Ionicons name="notifications-outline" size={22} color="#0F172A" />
+                        <Ionicons name="notifications-outline" size={22} color="#1e4b69" />
                         <View className="absolute top-3 right-3 w-2 h-2 bg-brand-orange rounded-full border-2 border-white" />
                     </TouchableOpacity>
                 </View>
 
                 {/* Status Stats */}
                 <View className="flex-row gap-4">
-                    <View className="flex-1 bg-brand-orange rounded-3xl p-5 overflow-hidden">
+                    <View className="flex-1 bg-brand-orange rounded-lg p-5 overflow-hidden">
                         <View className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full" />
                         <Text className="text-white/80 font-bold text-[10px] uppercase tracking-widest">Remaining</Text>
                         <Text className="text-white text-3xl font-black mt-1">{pending}</Text>
                     </View>
-                    <View className="flex-1 bg-brand-slate rounded-3xl p-5 overflow-hidden">
+                    <View className="flex-1 bg-brand-secondary rounded-lg p-5 overflow-hidden">
                         <View className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full" />
                         <Text className="text-white/80 font-bold text-[10px] uppercase tracking-widest">Completed</Text>
                         <Text className="text-white text-3xl font-black mt-1">{completed}</Text>
@@ -138,20 +138,20 @@ export default function DeliveryPersonHomeScreen() {
             {/* Quick Actions */}
             <View className="px-8 mb-6">
                 <TouchableOpacity
-                    className="bg-slate-900 rounded-3xl p-6 flex-row items-center justify-between"
+                    className="bg-slate-900 rounded-lg p-6 flex-row items-center justify-between"
                     onPress={() => router.push('/(tabs-delivery)/scan' as any)}>
                     <View>
                         <Text className="text-white font-black text-lg">Scan & Go</Text>
                         <Text className="text-white/60 text-xs mt-1">Ready for your next pickup?</Text>
                     </View>
-                    <View className="w-14 h-14 bg-brand-orange rounded-2xl items-center justify-center">
+                    <View className="w-14 h-14 bg-brand-orange rounded-lg items-center justify-center">
                         <Ionicons name="scan" size={28} color="white" />
                     </View>
                 </TouchableOpacity>
             </View>
 
             <View className="flex-row justify-between items-center px-8 mb-4">
-                <Text className="text-brand-slate font-black text-lg">Delivery Queue</Text>
+                <Text className="text-brand-secondary font-black text-lg">Delivery Queue</Text>
                 <Text className="text-slate-400 text-xs font-bold uppercase">{MY_DELIVERIES.length} Total</Text>
             </View>
 

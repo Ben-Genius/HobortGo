@@ -28,7 +28,7 @@ export default function DeliveryDetailsScreen() {
             <Text className="text-2xl font-bold text-gray-900 mb-2">Delivery #{id}</Text>
             <Text className="text-gray-500 mb-6">Scan QR to Auto-Fill Tracking Data or Update Manually.</Text>
 
-            <View className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6">
+            <View className="bg-white p-5 rounded-lg shadow-sm border border-gray-100 mb-6">
                 <Text className="font-semibold text-lg border-b border-gray-100 pb-2 mb-4">Proof of Delivery</Text>
 
                 <CustomInput control={control} name="receivedBy" label="Receiver Name" placeholder="John Doe" />

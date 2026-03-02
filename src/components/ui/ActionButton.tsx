@@ -26,12 +26,12 @@ export function ActionButton({
             textClass = 'text-white';
             break;
         case 'secondary':
-            bgClass = 'bg-brand-navy';
+            bgClass = 'bg-brand-secondary';
             textClass = 'text-white';
             break;
         case 'outline':
             bgClass = 'bg-transparent border-2 border-slate-200';
-            textClass = 'text-brand-slate';
+            textClass = 'text-brand-secondary';
             break;
         case 'danger':
             bgClass = 'bg-red-500';
@@ -43,7 +43,7 @@ export function ActionButton({
 
     return (
         <TouchableOpacity
-            className={`py-5 rounded-3xl items-center justify-center flex-row ${bgClass} ${opacity} ${className}`}
+            className={`py-5 rounded-lg items-center justify-center flex-row ${bgClass} ${opacity} ${className}`}
             disabled={disabled || isLoading}
             activeOpacity={0.8}
             {...props}
@@ -51,7 +51,7 @@ export function ActionButton({
             {isLoading ? (
                 <ActivityIndicator color="white" />
             ) : (
-                <Text className={`font-black text-base uppercase tracking-widest ${textClass}`}>{label}</Text>
+                <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className={`text-base ${textClass}`}>{label}</Text>
             )}
         </TouchableOpacity>
     );

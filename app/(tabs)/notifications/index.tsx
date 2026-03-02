@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type NotifType = 'status' | 'scan' | 'delivery' | 'sla' | 'batch';
 
@@ -73,12 +74,13 @@ export default function AdminNotificationsScreen() {
     };
 
     return (
-        <View className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white">
             {/* Header */}
-            <View className="bg-white pt-14 pb-4 px-6 border-b border-gray-100">
+            <View className="bg-white pt-6 pb-4 px-6 border-b border-gray-100">
                 <View className="flex-row justify-between items-center">
                     <View className="flex-row items-center">
-                        <Text className="text-2xl font-extrabold text-gray-900 mr-3">Notifications</Text>
+                        <Text style={{ fontFamily: 'Poppins_600' }} className="text-brand-secondary text-lg mt-1">
+                            Notifications </Text>
                         {unreadCount > 0 && (
                             <View className="bg-[#f0782d] w-6 h-6 rounded-full items-center justify-center">
                                 <Text className="text-white font-bold text-xs">{unreadCount}</Text>
@@ -106,6 +108,6 @@ export default function AdminNotificationsScreen() {
                     </View>
                 }
             />
-        </View>
+        </SafeAreaView>
     );
 }

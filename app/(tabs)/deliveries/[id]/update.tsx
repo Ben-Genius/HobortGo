@@ -106,7 +106,7 @@ export default function DeliveryUpdateScreen() {
                         <View className="flex-row justify-between mb-2">
                             <TouchableOpacity
                                 onPress={() => setImageCaptured(!imageCaptured)}
-                                className={`flex-1 py-8 rounded-2xl items-center justify-center border-2 border-dashed mr-2 ${imageCaptured ? 'bg-green-50 border-green-400' : 'bg-gray-50 border-gray-300'
+                                className={`flex-1 py-8 rounded-lg items-center justify-center border-2 border-dashed mr-2 ${imageCaptured ? 'bg-green-50 border-green-400' : 'bg-gray-50 border-gray-300'
                                     }`}
                             >
                                 <Text className="text-3xl mb-2">{imageCaptured ? '✅' : '📷'}</Text>
@@ -117,7 +117,7 @@ export default function DeliveryUpdateScreen() {
 
                             <TouchableOpacity
                                 onPress={() => setSignatureCaptured(!signatureCaptured)}
-                                className={`flex-1 py-8 rounded-2xl items-center justify-center border-2 border-dashed ml-2 ${signatureCaptured ? 'bg-green-50 border-green-400' : 'bg-gray-50 border-gray-300'
+                                className={`flex-1 py-8 rounded-lg items-center justify-center border-2 border-dashed ml-2 ${signatureCaptured ? 'bg-green-50 border-green-400' : 'bg-gray-50 border-gray-300'
                                     }`}
                             >
                                 <Text className="text-3xl mb-2">{signatureCaptured ? '✍️' : '📝'}</Text>
@@ -132,7 +132,7 @@ export default function DeliveryUpdateScreen() {
                 <View className="mb-6">
                     <Text className="text-gray-900 font-extrabold text-lg mb-2">Courier Notes (Optional)</Text>
                     <TextInput
-                        className="bg-white border border-gray-200 rounded-2xl min-h-[100px] p-4 text-gray-800"
+                        className="bg-white border border-gray-200 rounded-lg min-h-[100px] p-4 text-gray-800"
                         placeholder="Location details, customer requests, etc."
                         multiline
                         textAlignVertical="top"

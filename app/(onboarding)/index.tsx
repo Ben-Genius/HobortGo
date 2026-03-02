@@ -14,7 +14,7 @@ const ONBOARDING_DATA = [
     {
         title: 'Digital Proof of Delivery',
         description: 'Instantly verify drop-offs with secure e-signatures and high-quality photo captures.',
-        image: require('../../assets/images/onboarding_2.png'),
+        image: require('../../assets/images/onboarding_2.jpg'),
     },
     {
         title: 'Fast & Reliable Transit',
@@ -38,10 +38,10 @@ export default function OnboardingScreen() {
 
     const renderItem = ({ item }: { item: any }) => (
         <View className="flex-1 items-center justify-center p-4">
-            <View className="w-full h-[65%] rounded-lg overflow-hidden shadow-2xl bg-gray-50 border border-gray-100 items-center justify-center relative mt-16">
+            <View className="w-full h-[65%] rounded-lg overflow-hidden bg-gray-50 border border-gray-100 items-center justify-center relative mt-16">
                 <Image
                     source={item.image}
-                    style={{ width: '100%', height: '100%', resizeMode: 'cover' }}
+                    style={{ width: '100%', height: '100%', resizeMode: 'cover', alignItems: 'center' }}
                 />
 
                 {/* Subtle gradient overlay at bottom of image for blending if needed */}
@@ -86,10 +86,10 @@ export default function OnboardingScreen() {
 
                 {/* Dynamic Text Content */}
                 <View className="min-h-[120px] justify-center mb-6">
-                    <Text className="text-3xl font-extrabold text-[#111827] text-center tracking-tight mb-3">
+                    <Text className="text-3xl font-bold text-[#111827] text-center tracking-tight mb-3">
                         {ONBOARDING_DATA[activeIndex].title}
                     </Text>
-                    <Text className="text-[#6B7280] text-center text-base leading-6 font-medium px-2 max-w-sm mx-auto">
+                    <Text className="text-[#6B7280] text-center text-base leading-2 font-normal px-2 max-w-sm mx-auto">
                         {ONBOARDING_DATA[activeIndex].description}
                     </Text>
                 </View>
@@ -98,7 +98,7 @@ export default function OnboardingScreen() {
                 <View className="flex-row justify-center mb-10 px-6 items-center">
                     {/* Next/Start Button */}
                     <TouchableOpacity
-                        className="w-full h-16 bg-[#f0782d] rounded-lg items-center justify-center shadow-lg shadow-[#f0782d]/30"
+                        className="w-full h-16 bg-[#f0782d] rounded-lg items-center justify-center"
                         onPress={handleNext}
                     >
                         <Text className="text-white font-bold text-lg tracking-wide rounded-lg">

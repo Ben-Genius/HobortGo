@@ -30,7 +30,7 @@ export default function DeliveryPersonTabLayout() {
                 name="index"
                 options={{
                     title: 'My Deliveries',
-                    tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="home" color={color} />,
+                    tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'home' : 'home-outline'} color={color} />,
                 }}
             />
             {/* Tab 2 — Scan */}
@@ -38,7 +38,7 @@ export default function DeliveryPersonTabLayout() {
                 name="scan/index"
                 options={{
                     title: 'Scan',
-                    tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="qr-code" color={color} />,
+                    tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'qr-code' : 'qr-code-outline'} color={color} />,
                 }}
             />
             {/* Tab 3 — Completed */}
@@ -46,7 +46,7 @@ export default function DeliveryPersonTabLayout() {
                 name="completed/index"
                 options={{
                     title: 'Completed',
-                    tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="checkmark-circle" color={color} />,
+                    tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'checkmark-circle' : 'checkmark-circle-outline'} color={color} />,
                 }}
             />
             {/* Tab 4 — Notifications */}
@@ -54,7 +54,7 @@ export default function DeliveryPersonTabLayout() {
                 name="notifications/index"
                 options={{
                     title: 'Alerts',
-                    tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="notifications" color={color} />,
+                    tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'notifications' : 'notifications-outline'} color={color} />,
                 }}
             />
         </Tabs>

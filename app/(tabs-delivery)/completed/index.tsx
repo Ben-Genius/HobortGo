@@ -37,7 +37,7 @@ export default function DeliveryPersonCompletedScreen() {
             <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={() => setExpanded(isExpanded ? null : item.id)}
-                className="bg-white rounded-2xl mb-3 border border-gray-100 overflow-hidden">
+                className="bg-white rounded-lg mb-3 border border-gray-100 overflow-hidden">
                 <View className="p-4">
                     <View className="flex-row justify-between items-start mb-2">
                         <Text className="text-gray-900 font-extrabold text-base">{item.trackingId}</Text>

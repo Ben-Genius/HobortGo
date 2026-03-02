@@ -22,7 +22,7 @@ export default function AdminScanScreen() {
                 <Text className="text-xl font-extrabold text-gray-900 mb-2 text-center">Camera Access Required</Text>
                 <Text className="text-gray-500 text-center mb-8">Grant camera permission to scan shipment QR codes</Text>
                 <TouchableOpacity
-                    className="bg-[#1e4b69] py-4 px-8 rounded-2xl w-full items-center"
+                    className="bg-[#1e4b69] py-4 px-8 rounded-lg w-full items-center"
                     onPress={requestPermission}>
                     <Text className="text-white font-bold text-lg">Grant Permission</Text>
                 </TouchableOpacity>
@@ -114,7 +114,7 @@ export default function AdminScanScreen() {
 
             {/* Bottom panel — Single mode */}
             {!batchMode && !scanning && scannedCodes.length > 0 && (
-                <View className="absolute bottom-10 left-6 right-6 bg-white rounded-3xl p-5 shadow-xl">
+                <View className="absolute bottom-10 left-6 right-6 bg-white rounded-lg p-5 shadow-xl">
                     <View className="flex-row items-center mb-3">
                         <View className="w-10 h-10 bg-[#e6f0f5] rounded-full items-center justify-center mr-3">
                             <Ionicons name="cube" size={20} color="#1e4b69" />
@@ -145,7 +145,7 @@ export default function AdminScanScreen() {
 
             {/* Bottom panel — Batch mode */}
             {batchMode && scannedCodes.length > 0 && (
-                <View className="absolute bottom-10 left-6 right-6 bg-white rounded-3xl p-5 shadow-xl max-h-72">
+                <View className="absolute bottom-10 left-6 right-6 bg-white rounded-lg p-5 shadow-xl max-h-72">
                     <View className="flex-row justify-between items-center mb-3">
                         <Text className="text-gray-900 font-extrabold text-lg">
                             Batch Queue ({scannedCodes.length})

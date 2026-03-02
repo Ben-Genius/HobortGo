@@ -24,7 +24,7 @@ export default function DeliveryPersonScanScreen() {
                 </View>
                 <Text className="text-xl font-extrabold text-gray-900 mb-2 text-center">Camera Access Required</Text>
                 <Text className="text-gray-500 text-center mb-8">Grant camera permission to scan QR codes</Text>
-                <TouchableOpacity className="bg-[#1e4b69] py-4 px-8 rounded-2xl w-full items-center" onPress={requestPermission}>
+                <TouchableOpacity className="bg-[#1e4b69] py-4 px-8 rounded-lg w-full items-center" onPress={requestPermission}>
                     <Text className="text-white font-bold text-lg">Grant Permission</Text>
                 </TouchableOpacity>
             </View>
@@ -112,7 +112,7 @@ export default function DeliveryPersonScanScreen() {
                         <Text className="text-[#1e4b69] font-medium ml-2">Rescan</Text>
                     </TouchableOpacity>
 
-                    <View className="bg-white rounded-2xl p-5 border border-gray-100 mb-4">
+                    <View className="bg-white rounded-lg p-5 border border-gray-100 mb-4">
                         <View className="items-center mb-4">
                             <View className="w-16 h-16 bg-[#e6f0f5] rounded-full items-center justify-center mb-3">
                                 <Ionicons name="cube" size={30} color="#1e4b69" />
@@ -128,7 +128,7 @@ export default function DeliveryPersonScanScreen() {
                     </View>
 
                     <TouchableOpacity
-                        className="bg-[#1e4b69] py-4 rounded-2xl items-center"
+                        className="bg-[#1e4b69] py-4 rounded-lg items-center"
                         onPress={handlePickupConfirm}>
                         <Text className="text-white font-extrabold text-lg">Confirm Pickup</Text>
                     </TouchableOpacity>
@@ -152,7 +152,7 @@ export default function DeliveryPersonScanScreen() {
                     <Text className="text-gray-500 text-sm mb-6">{scannedId} — Capture proof of delivery</Text>
 
                     {/* Signature */}
-                    <View className="bg-white rounded-2xl p-4 border border-gray-100 mb-3">
+                    <View className="bg-white rounded-lg p-4 border border-gray-100 mb-3">
                         <Text className="text-gray-700 font-bold mb-2">Customer Signature</Text>
                         <TouchableOpacity className="h-24 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl items-center justify-center">
                             <Ionicons name="create-outline" size={24} color="#9CA3AF" />
@@ -161,7 +161,7 @@ export default function DeliveryPersonScanScreen() {
                     </View>
 
                     {/* Delivery Photo */}
-                    <View className="bg-white rounded-2xl p-4 border border-gray-100 mb-3">
+                    <View className="bg-white rounded-lg p-4 border border-gray-100 mb-3">
                         <Text className="text-gray-700 font-bold mb-2">Delivery Photo</Text>
                         <TouchableOpacity className="h-24 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl items-center justify-center">
                             <Ionicons name="camera-outline" size={24} color="#9CA3AF" />
@@ -170,7 +170,7 @@ export default function DeliveryPersonScanScreen() {
                     </View>
 
                     {/* Notes */}
-                    <View className="bg-white rounded-2xl p-4 border border-gray-100 mb-5">
+                    <View className="bg-white rounded-lg p-4 border border-gray-100 mb-5">
                         <Text className="text-gray-700 font-bold mb-2">Notes (optional)</Text>
                         <TextInput
                             className="text-gray-700 text-sm min-h-[60px]"
@@ -183,12 +183,12 @@ export default function DeliveryPersonScanScreen() {
                     </View>
 
                     <TouchableOpacity
-                        className="bg-green-600 py-4 rounded-2xl items-center mb-3"
+                        className="bg-green-600 py-4 rounded-lg items-center mb-3"
                         onPress={handleCompleteDelivery}>
                         <Text className="text-white font-extrabold text-lg">Complete Delivery</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        className="border border-gray-200 py-3 rounded-2xl items-center mb-10"
+                        className="border border-gray-200 py-3 rounded-lg items-center mb-10"
                         onPress={() => setFlow('failed')}>
                         <Text className="text-gray-500 font-medium">Mark as Attempted / Failed</Text>
                     </TouchableOpacity>
@@ -207,7 +207,7 @@ export default function DeliveryPersonScanScreen() {
                     {FAIL_REASONS.map(reason => (
                         <TouchableOpacity
                             key={reason}
-                            className="bg-white border border-gray-200 rounded-2xl p-4 mb-3 flex-row items-center justify-between"
+                            className="bg-white border border-gray-200 rounded-lg p-4 mb-3 flex-row items-center justify-between"
                             onPress={() => handleFailed(reason)}>
                             <Text className="text-gray-800 font-semibold">{reason}</Text>
                             <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />

@@ -17,7 +17,7 @@ export default function ScannerScreen() {
             <View className="flex-1 bg-[#F9FAFB] items-center justify-center px-6">
                 <Text className="text-xl font-bold text-gray-900 mb-4 text-center">We need your permission to show the camera</Text>
                 <TouchableOpacity
-                    className="bg-[#1e4b69] py-4 px-8 rounded-2xl w-full items-center"
+                    className="bg-[#1e4b69] py-4 px-8 rounded-lg w-full items-center"
                     onPress={requestPermission}
                 >
                     <Text className="text-white font-bold text-lg">Grant Permission</Text>
@@ -96,7 +96,7 @@ export default function ScannerScreen() {
             </View>
 
             {scannedCodes.length > 0 && (
-                <View className="absolute bottom-10 left-6 right-6 bg-white rounded-3xl p-4 shadow-xl max-h-60">
+                <View className="absolute bottom-10 left-6 right-6 bg-white rounded-lg p-4 shadow-xl max-h-60">
                     <View className="flex-row justify-between items-center mb-3">
                         <Text className="text-gray-900 font-extrabold text-lg">Scanned Packages</Text>
                         <TouchableOpacity onPress={handleProcess} className="bg-[#1e4b69] px-4 py-1.5 rounded-full">
