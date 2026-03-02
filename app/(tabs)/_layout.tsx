@@ -4,66 +4,74 @@ import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+const TAB_BAR_STYLE = {
+  backgroundColor: '#FFFFFF',
+  borderTopWidth: 1,
+  borderTopColor: '#F3F4F6',
+  height: Platform.OS === 'ios' ? 88 : 68,
+  paddingBottom: Platform.OS === 'ios' ? 28 : 10,
+  paddingTop: 10,
+};
 
+export default function AdminTabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#f0782d', // HobortGo Orange
+        tabBarActiveTintColor: '#f0782d',
         tabBarInactiveTintColor: '#9CA3AF',
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 1,
-          borderTopColor: '#F3F4F6',
-          height: Platform.OS === 'ios' ? 88 : 68,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-          paddingTop: 10,
-        }
+        tabBarStyle: TAB_BAR_STYLE,
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
       }}>
+      {/* Tab 1 — Home / Dashboard */}
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="home" color={color} />,
         }}
       />
+      {/* Tab 2 — Scan / Receipt */}
+      <Tabs.Screen
+        name="scan/index"
+        options={{
+          title: 'Scan',
+          tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="qr-code" color={color} />,
+        }}
+      />
+      {/* Tab 3 — Shipments */}
+      <Tabs.Screen
+        name="shipments/index"
+        options={{
+          title: 'Shipments',
+          tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="cube" color={color} />,
+        }}
+      />
+      {/* Tab 4 — Deliveries */}
       <Tabs.Screen
         name="deliveries/index"
         options={{
           title: 'Deliveries',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="shippingbox.fill" color={color} />,
+          tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="bicycle" color={color} />,
         }}
       />
+      {/* Tab 5 — Notifications */}
       <Tabs.Screen
-        name="deliveries/[id]"
+        name="notifications/index"
         options={{
-          href: null, // Hide specific delivery details from tab bar
+          title: 'Alerts',
+          tabBarIcon: ({ color, size }) => <IconSymbol size={size ?? 24} name="notifications" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="deliveries/[id]/update"
-        options={{
-          href: null, // Hide from tab bar
-        }}
-      />
-      <Tabs.Screen
-        name="scanner"
-        options={{
-          href: null, // Hide from tab bar
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
-        }}
-      />
+
+      {/* ── Hidden screens ── */}
+      <Tabs.Screen name="scanner" options={{ href: null }} />
+      <Tabs.Screen name="deliveries/[id]" options={{ href: null }} />
+      <Tabs.Screen name="deliveries/[id]/update" options={{ href: null }} />
+      <Tabs.Screen name="shipments/[id]" options={{ href: null }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );
 }

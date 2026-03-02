@@ -43,7 +43,7 @@ export function ActionButton({
 
     return (
         <TouchableOpacity
-            className={`py-4 rounded-2xl items-center justify-center flex-row ${bgClass} ${opacity} ${className}`}
+            className={`py-4 rounded-lg items-center justify-center flex-row ${bgClass} ${opacity} ${className}`}
             disabled={disabled || isLoading}
             activeOpacity={0.8}
             {...props}

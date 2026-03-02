@@ -38,7 +38,7 @@ export default function OnboardingScreen() {
 
     const renderItem = ({ item }: { item: any }) => (
         <View className="flex-1 items-center justify-center p-4">
-            <View className="w-full h-[65%] rounded-[48px] overflow-hidden shadow-2xl bg-gray-50 border border-gray-100 items-center justify-center relative mt-16">
+            <View className="w-full h-[65%] rounded-lg overflow-hidden shadow-2xl bg-gray-50 border border-gray-100 items-center justify-center relative mt-16">
                 <Image
                     source={item.image}
                     style={{ width: '100%', height: '100%', resizeMode: 'cover' }}
@@ -63,7 +63,7 @@ export default function OnboardingScreen() {
             </View>
 
             {/* Slider occupying major mid space */}
-            <View className="h-[70%] z-0">
+            <View className="h-full pb-12 pt-4 -mt-24 z-0">
                 <Carousel
                     ref={carouselRef}
                     data={ONBOARDING_DATA}
@@ -82,37 +82,32 @@ export default function OnboardingScreen() {
             </View>
 
             {/* Bottom Content Section */}
-            <View className="flex-1 px-8 pb-12 pt-4 justify-end">
+            <View className="flex-1 justify-end">
 
                 {/* Dynamic Text Content */}
-                <View className="min-h-[100px] justify-center mb-6">
+                <View className="min-h-[120px] justify-center mb-6">
                     <Text className="text-3xl font-extrabold text-[#111827] text-center tracking-tight mb-3">
                         {ONBOARDING_DATA[activeIndex].title}
                     </Text>
-                    <Text className="text-[#6B7280] text-center text-base leading-6 font-medium px-2">
+                    <Text className="text-[#6B7280] text-center text-base leading-6 font-medium px-2 max-w-sm mx-auto">
                         {ONBOARDING_DATA[activeIndex].description}
                     </Text>
                 </View>
 
                 {/* Pagination Dots */}
-                <View className="flex-row justify-center mb-10 items-center">
-                    {ONBOARDING_DATA.map((_, i) => (
-                        <View
-                            key={i}
-                            className={`h-2 rounded-full mx-1.5 transition-all duration-300 ${i === activeIndex ? 'w-8 bg-[#1e4b69]' : 'w-2 bg-gray-200'}`}
-                        />
-                    ))}
+                <View className="flex-row justify-center mb-10 px-6 items-center">
+                    {/* Next/Start Button */}
+                    <TouchableOpacity
+                        className="w-full h-16 bg-[#f0782d] rounded-lg items-center justify-center shadow-lg shadow-[#f0782d]/30"
+                        onPress={handleNext}
+                    >
+                        <Text className="text-white font-bold text-lg tracking-wide rounded-lg">
+                            {activeIndex === ONBOARDING_DATA.length - 1 ? "Get Started" : "Continue"}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
 
-                {/* Next/Start Button */}
-                <TouchableOpacity
-                    className="w-full h-16 bg-[#f0782d] rounded-[32px] items-center justify-center shadow-lg shadow-[#f0782d]/30"
-                    onPress={handleNext}
-                >
-                    <Text className="text-white font-bold text-lg tracking-wide rounded-[32px]">
-                        {activeIndex === ONBOARDING_DATA.length - 1 ? "Get Started" : "Continue"}
-                    </Text>
-                </TouchableOpacity>
+
             </View>
         </View>
     );
