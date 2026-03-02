@@ -55,7 +55,7 @@ Ensure you have [Node.js](https://nodejs.org/) installed.
 
 ### 2. Install Dependencies
 ```bash
-npm install
+yarn install
 ```
 
 ### 3. Start the Application
