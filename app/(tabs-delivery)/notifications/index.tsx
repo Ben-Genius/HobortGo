@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type NotifType = 'assignment' | 'update' | 'pickup' | 'sync';
 
@@ -67,21 +68,21 @@ export default function DeliveryPersonNotificationsScreen() {
     };
 
     return (
-        <View className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white">
             {/* Header */}
-            <View className="bg-white pt-14 pb-4 px-6 border-b border-gray-100">
+            <View className="bg-white pt-6 pb-4 px-5 border-b border-slate-100">
                 <View className="flex-row justify-between items-center">
-                    <View className="flex-row items-center">
-                        <Text className="text-2xl font-extrabold text-gray-900 mr-3">Updates</Text>
+                    <View className="flex-row items-center gap-2">
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-xl">Updates</Text>
                         {unreadCount > 0 && (
-                            <View className="bg-[#f0782d] w-6 h-6 rounded-full items-center justify-center">
-                                <Text className="text-white font-bold text-xs">{unreadCount}</Text>
+                            <View className="bg-brand-orange w-5 h-5 rounded-full items-center justify-center">
+                                <Text style={{ fontFamily: 'Manrope_700Bold', fontSize: 10 }} className="text-white">{unreadCount}</Text>
                             </View>
                         )}
                     </View>
                     {unreadCount > 0 && (
                         <TouchableOpacity onPress={markAllRead}>
-                            <Text className="text-[#1e4b69] font-semibold text-sm">Mark all read</Text>
+                            <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-brand-secondary text-sm">Mark all read</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -100,6 +101,6 @@ export default function DeliveryPersonNotificationsScreen() {
                     </View>
                 }
             />
-        </View>
+        </SafeAreaView>
     );
 }

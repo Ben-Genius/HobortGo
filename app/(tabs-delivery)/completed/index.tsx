@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useState } from 'react';
 import { FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const COMPLETED_DELIVERIES = [
     { id: '1', trackingId: 'HB-10009', client: 'Kojo Frimpong', address: 'Labone, Accra', date: 'Today, 11:42 AM', status: 'Delivered', notes: 'Left with concierge', hasPhoto: true, hasSig: true },
@@ -93,10 +94,15 @@ export default function DeliveryPersonCompletedScreen() {
     };
 
     return (
-        <View className="flex-1 bg-[#F9FAFB]">
+        <SafeAreaView className="flex-1 bg-[#F9FAFB]">
             {/* Header */}
-            <View className="bg-white pt-14 pb-4 px-6 border-b border-gray-100">
-                <Text className="text-2xl font-extrabold text-gray-900 mb-4">Completed</Text>
+            <View className="bg-white pt-6 pb-4 px-5 border-b border-gray-100">
+                <View className="flex-row justify-between items-center mb-4">
+                    <View>
+                        <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-400 text-xs uppercase tracking-widest">History</Text>
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-xl mt-0.5">Completed</Text>
+                    </View>
+                </View>
 
                 {/* Stats row */}
                 <View className="flex-row gap-3 mb-4">
@@ -141,6 +147,6 @@ export default function DeliveryPersonCompletedScreen() {
                     </View>
                 }
             />
-        </View>
+        </SafeAreaView>
     );
 }

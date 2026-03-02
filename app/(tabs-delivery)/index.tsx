@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { FlatList, Linking, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src/store/authStore';
 
 type DeliveryStatus = 'Pending' | 'Out for Delivery' | 'Delivered' | 'Failed';
@@ -102,13 +103,13 @@ export default function DeliveryPersonHomeScreen() {
     };
 
     return (
-        <View className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white">
             {/* Header */}
-            <View className="pt-16 pb-8 px-8">
-                <View className="flex-row justify-between items-center mb-8">
+            <View className="pt-6 pb-6 px-5">
+                <View className="flex-row justify-between items-center mb-6">
                     <View>
-                        <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest">Courier Pro</Text>
-                        <Text className="text-brand-secondary text-3xl font-black mt-1">
+                        <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-400 text-xs uppercase tracking-widest">Courier Pro</Text>
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-xl mt-0.5">
                             Hi, <Text className="text-brand-orange">{user?.name?.split(' ')[0] ?? 'Driver'}</Text>
                         </Text>
                     </View>
@@ -136,32 +137,32 @@ export default function DeliveryPersonHomeScreen() {
             </View>
 
             {/* Quick Actions */}
-            <View className="px-8 mb-6">
+            <View className="px-5 mb-4">
                 <TouchableOpacity
-                    className="bg-slate-900 rounded-lg p-6 flex-row items-center justify-between"
+                    className="bg-brand-secondary rounded-lg p-5 flex-row items-center justify-between"
                     onPress={() => router.push('/(tabs-delivery)/scan' as any)}>
                     <View>
-                        <Text className="text-white font-black text-lg">Scan & Go</Text>
-                        <Text className="text-white/60 text-xs mt-1">Ready for your next pickup?</Text>
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white text-base">Scan &amp; Go</Text>
+                        <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-white/60 text-xs mt-0.5">Ready for your next pickup?</Text>
                     </View>
-                    <View className="w-14 h-14 bg-brand-orange rounded-lg items-center justify-center">
-                        <Ionicons name="scan" size={28} color="white" />
+                    <View className="w-12 h-12 bg-brand-orange rounded-lg items-center justify-center">
+                        <Ionicons name="scan" size={24} color="white" />
                     </View>
                 </TouchableOpacity>
             </View>
 
-            <View className="flex-row justify-between items-center px-8 mb-4">
-                <Text className="text-brand-secondary font-black text-lg">Delivery Queue</Text>
-                <Text className="text-slate-400 text-xs font-bold uppercase">{MY_DELIVERIES.length} Total</Text>
+            <View className="flex-row justify-between items-center px-5 my-3">
+                <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-base">Delivery Queue</Text>
+                <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-xs">{MY_DELIVERIES.length} Total</Text>
             </View>
 
             <FlatList
                 data={MY_DELIVERIES}
                 keyExtractor={item => item.id}
                 renderItem={renderItem}
-                contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 100 }}
+                contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 110 }}
                 showsVerticalScrollIndicator={false}
             />
-        </View>
+        </SafeAreaView>
     );
 }
