@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { FlatList, Linking, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, Linking, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src/store/authStore';
 
@@ -49,10 +49,10 @@ export default function DeliveryPersonHomeScreen() {
                     <View className="flex-row justify-between items-start mb-4">
                         <View className="flex-row items-center">
                             <View style={{ backgroundColor: cfg.dot }} className="w-2.5 h-2.5 rounded-full mr-3" />
-                            <Text className="text-brand-secondary font-black text-lg">{item.trackingId}</Text>
+                            <Text className="text-brand-secondary font-medium text-lg">{item.trackingId}</Text>
                         </View>
                         <View style={{ backgroundColor: cfg.bg }} className="px-3 py-1.5 rounded-xl">
-                            <Text style={{ color: cfg.text }} className="text-[10px] font-black uppercase tracking-tighter">{item.status}</Text>
+                            <Text style={{ color: cfg.text }} className="text-[10px] font-medium uppercase tracking-tighter">{item.status}</Text>
                         </View>
                     </View>
 
@@ -61,7 +61,7 @@ export default function DeliveryPersonHomeScreen() {
                             <View className="w-8 h-8 bg-white rounded-xl items-center justify-center border border-slate-100">
                                 <Ionicons name="person-outline" size={14} color="#64748B" />
                             </View>
-                            <Text className="text-brand-secondary font-bold text-sm ml-3">{item.client}</Text>
+                            <Text className="text-brand-secondary font-medium text-sm ml-3">{item.client}</Text>
                         </View>
                         <View className="flex-row items-center">
                             <View className="w-8 h-8 bg-white rounded-xl items-center justify-center border border-slate-100">
@@ -79,13 +79,13 @@ export default function DeliveryPersonHomeScreen() {
                                 className="flex-1 bg-brand-secondary py-4 rounded-lg flex-row items-center justify-center gap-2"
                                 onPress={() => handleNavigate(item.address)}>
                                 <Ionicons name="navigate-outline" size={16} color="white" />
-                                <Text className="text-white font-bold text-sm">Navigate</Text>
+                                <Text className="text-white font-normal text-sm">Navigate</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 className="flex-1 bg-white py-4 rounded-lg flex-row items-center justify-center gap-2 border border-slate-200"
                                 onPress={() => Linking.openURL(`tel:${item.phone}`)}>
                                 <Ionicons name="call-outline" size={16} color="#1e4b69" />
-                                <Text className="text-brand-secondary font-bold text-sm">Call</Text>
+                                <Text className="text-brand-secondary font-normal text-sm">Call</Text>
                             </TouchableOpacity>
                         </View>
                         {(item.status === 'Out for Delivery' || item.status === 'Pending') && (
@@ -93,7 +93,7 @@ export default function DeliveryPersonHomeScreen() {
                                 className="mt-3 bg-brand-orange py-4 rounded-lg flex-row items-center justify-center gap-2"
                                 onPress={() => router.push('/(tabs-delivery)/scan' as any)}>
                                 <Ionicons name="checkmark-circle-outline" size={18} color="white" />
-                                <Text className="text-white font-black uppercase tracking-widest text-sm">Complete Delivery</Text>
+                                <Text className="text-white font-medium text-sm">Complete Delivery</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -122,16 +122,26 @@ export default function DeliveryPersonHomeScreen() {
                 </View>
 
                 {/* Status Stats */}
-                <View className="flex-row gap-4">
-                    <View className="flex-1 bg-brand-orange rounded-lg p-5 overflow-hidden">
-                        <View className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full" />
-                        <Text className="text-white/80 font-bold text-[10px] uppercase tracking-widest">Remaining</Text>
-                        <Text className="text-white text-3xl font-black mt-1">{pending}</Text>
+                <View className="flex-row gap-3">
+                    <View className="flex-1">
+                        <View className="bg-brand-orange rounded-lg p-4 overflow-hidden mb-3">
+                            <View className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full" />
+                            <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-white/70 uppercase tracking-widest">Remaining</Text>
+                            <Text style={{ fontFamily: 'Poppins_700Bold' }} className="text-white text-3xl mt-0.5">{pending}</Text>
+                        </View>
+                        <View className="bg-brand-secondary rounded-lg p-4 overflow-hidden">
+                            <View className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full" />
+                            <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-white/70 uppercase tracking-widest">Completed</Text>
+                            <Text style={{ fontFamily: 'Poppins_700Bold' }} className="text-white text-3xl mt-0.5">{completed}</Text>
+                        </View>
                     </View>
-                    <View className="flex-1 bg-brand-secondary rounded-lg p-5 overflow-hidden">
-                        <View className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full" />
-                        <Text className="text-white/80 font-bold text-[10px] uppercase tracking-widest">Completed</Text>
-                        <Text className="text-white text-3xl font-black mt-1">{completed}</Text>
+                    {/* Rider illustration */}
+                    <View className="w-36 items-center justify-center">
+                        <Image
+                            source={require('../../assets/images/illustrations/delivery_rider.webp')}
+                            style={{ width: 140, height: 140 }}
+                            resizeMode="contain"
+                        />
                     </View>
                 </View>
             </View>
@@ -140,7 +150,10 @@ export default function DeliveryPersonHomeScreen() {
             <View className="px-5 mb-4">
                 <TouchableOpacity
                     className="bg-brand-secondary rounded-lg p-5 flex-row items-center justify-between"
-                    onPress={() => router.push('/(tabs-delivery)/scan' as any)}>
+                    onPress={() => router.push({
+                        pathname: "/(tabs-delivery)/scan/result",
+                        params: { trackingId: 'HB-10041', flow: 'delivery' }
+                    } as any)}>
                     <View>
                         <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white text-base">Scan &amp; Go</Text>
                         <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-white/60 text-xs mt-0.5">Ready for your next pickup?</Text>

@@ -35,7 +35,7 @@ export default function DeliveryPersonTabLayout() {
             />
             {/* Tab 2 — Scan */}
             <Tabs.Screen
-                name="scan/index"
+                name="scan"
                 options={{
                     title: 'Scan',
                     tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'qr-code' : 'qr-code-outline'} color={color} />,

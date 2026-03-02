@@ -1,220 +1,249 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraView, scanFromURLAsync, useCameraPermissions } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, Vibration, View } from 'react-native';
-
-type ScanFlow = 'idle' | 'pickup_confirm' | 'delivery_complete' | 'failed';
+import React, { useRef, useState } from 'react';
+import { Alert, Image, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, Vibration, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { SHIPMENTS } from '../../../src/data/shipments';
 
 export default function DeliveryPersonScanScreen() {
     const [permission, requestPermission] = useCameraPermissions();
-    const [flow, setFlow] = useState<ScanFlow>('idle');
-    const [scannedId, setScannedId] = useState<string | null>(null);
-    const [notes, setNotes] = useState('');
-    const [failReason, setFailReason] = useState<string | null>(null);
+    const [mode, setMode] = useState<'camera' | 'manual'>('camera');
+    const [manualId, setManualId] = useState('');
+    const [scanning, setScanning] = useState(true);
     const router = useRouter();
+    const inputRef = useRef<TextInput>(null);
 
+    // Navigate to scan/result within the nested Stack using absolute path
+    const navigate = (trackingId: string, flow: string) => {
+        router.push({
+            pathname: "/(tabs-delivery)/scan/result",
+            params: { trackingId, flow }
+        } as any);
+    };
+
+    // Decode QR from a picked image using expo-camera's scanFromURLAsync
+    const handleScanFromImage = async () => {
+        try {
+            const picked = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: 'images',
+                quality: 1,
+            });
+            if (picked.canceled || !picked.assets[0]) return;
+            const uri = picked.assets[0].uri;
+            const results = await scanFromURLAsync(uri, ['qr']);
+            if (results.length === 0) {
+                Alert.alert('No QR Found', 'Could not detect a QR code in that image. Make sure the QR fills most of the frame.');
+                return;
+            }
+            const data = results[0].data;
+            let id = data;
+            if (data.includes('hobortgo.com/')) id = data.split('/').pop() ?? data;
+            const deliveryFlow = id.charCodeAt(0) % 2 === 0 ? 'pickup' : 'delivery';
+            navigate(id, deliveryFlow);
+        } catch (e: any) {
+            Alert.alert('Error', e?.message ?? 'Could not scan image.');
+        }
+    };
+
+    const handleBarcodeScanned = ({ data }: { data: string }) => {
+        if (!scanning) return;
+        setScanning(false);
+        let id = data;
+        if (data.includes('hobortgo.com/')) id = data.split('/').pop() ?? data;
+        Vibration.vibrate(100);
+        const deliveryFlow = id.charCodeAt(0) % 2 === 0 ? 'pickup' : 'delivery';
+        setTimeout(() => setScanning(true), 2000);
+        navigate(id, deliveryFlow);
+    };
+
+    const handleManualSubmit = () => {
+        const id = manualId.trim().toUpperCase();
+        if (!id) return;
+        Keyboard.dismiss();
+        navigate(id, 'delivery');
+    };
+
+    // ── Permission denied ──────────────────────────────────────────────────────
     if (!permission) return <View className="flex-1 bg-black" />;
 
     if (!permission.granted) {
         return (
-            <View className="flex-1 bg-[#F9FAFB] items-center justify-center px-6">
+            <SafeAreaView className="flex-1 bg-white items-center justify-center px-6">
                 <View className="w-20 h-20 bg-[#e6f0f5] rounded-full items-center justify-center mb-6">
                     <Ionicons name="camera-outline" size={36} color="#1e4b69" />
                 </View>
-                <Text className="text-xl font-extrabold text-gray-900 mb-2 text-center">Camera Access Required</Text>
-                <Text className="text-gray-500 text-center mb-8">Grant camera permission to scan QR codes</Text>
-                <TouchableOpacity className="bg-[#1e4b69] py-4 px-8 rounded-lg w-full items-center" onPress={requestPermission}>
-                    <Text className="text-white font-bold text-lg">Grant Permission</Text>
+                <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-xl text-center mb-2">
+                    Camera Access Required
+                </Text>
+                <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-sm text-center mb-8">
+                    Grant camera permission to scan QR codes on shipment labels.
+                </Text>
+                <TouchableOpacity
+                    className="bg-brand-secondary rounded-lg py-4 px-8 w-full items-center mb-3"
+                    onPress={requestPermission}>
+                    <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white">Grant Permission</Text>
                 </TouchableOpacity>
-            </View>
+                <TouchableOpacity onPress={() => setMode('manual')}>
+                    <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-brand-orange text-sm">Enter tracking ID manually</Text>
+                </TouchableOpacity>
+            </SafeAreaView>
         );
     }
 
-    const handleBarcodeScanned = ({ data }: { data: string }) => {
-        if (flow !== 'idle') return;
-        let id = data;
-        if (data.includes('hobortgo.com/')) id = data.split('/').pop() ?? data;
-        if (id.length > 20) id = id.substring(0, 12);
-        Vibration.vibrate(100);
-        setScannedId(id);
-        // For demo: alternate between pickup and delivery flows based on odd/even
-        setFlow(id.charCodeAt(0) % 2 === 0 ? 'pickup_confirm' : 'delivery_complete');
-    };
+    // ── Manual entry mode ──────────────────────────────────────────────────────
+    if (mode === 'manual') {
+        return (
+            <SafeAreaView className="flex-1 bg-white">
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+                    <View className="pt-6 px-5 flex-1">
+                        {/* Back */}
+                        <View className="flex-row items-center justify-between mb-8">
+                            <TouchableOpacity
+                                onPress={() => setMode('camera')}
+                                className="w-10 h-10 bg-slate-50 rounded-lg items-center justify-center border border-slate-100">
+                                <Ionicons name="arrow-back-outline" size={20} color="#1e4b69" />
+                            </TouchableOpacity>
+                            <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-400 text-xs uppercase tracking-widest">
+                                Manual Entry
+                            </Text>
+                            <View className="w-10" />
+                        </View>
 
-    const handlePickupConfirm = () => {
-        Alert.alert('Picked Up!', `${scannedId} is now Out for Delivery. Customer notified.`, [
-            { text: 'OK', onPress: () => { setFlow('idle'); setScannedId(null); } },
-        ]);
-    };
+                        {/* Illustration */}
+                        <View className="items-center mb-8">
+                            <Image
+                                source={require('../../../assets/images/illustrations/scan_package.webp')}
+                                style={{ width: 180, height: 160 }}
+                                resizeMode="contain"
+                            />
+                        </View>
 
-    const handleCompleteDelivery = () => {
-        Alert.alert('Delivery Complete', `${scannedId} marked as Delivered. Customer will receive confirmation.`, [
-            { text: 'OK', onPress: () => { setFlow('idle'); setScannedId(null); setNotes(''); } },
-        ]);
-    };
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-xl text-center mb-1">
+                            Enter Tracking ID
+                        </Text>
+                        <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-sm text-center mb-6">
+                            Type the tracking ID printed on the shipment label.
+                        </Text>
 
-    const handleFailed = (reason: string) => {
-        setFailReason(reason);
-        Alert.alert('Logged', `${scannedId} marked as Attempted. Admin notified.`, [
-            { text: 'OK', onPress: () => { setFlow('idle'); setScannedId(null); setFailReason(null); } },
-        ]);
-    };
+                        {/* Input */}
+                        <TextInput
+                            ref={inputRef}
+                            style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 18, color: '#1e4b69', letterSpacing: 2 }}
+                            className="bg-slate-50 rounded-lg px-5 py-4 border border-slate-200 text-center mb-4"
+                            placeholder="HB-10041"
+                            placeholderTextColor="#CBD5E1"
+                            value={manualId}
+                            onChangeText={t => setManualId(t.toUpperCase())}
+                            autoCapitalize="characters"
+                            autoFocus
+                            returnKeyType="done"
+                            onSubmitEditing={handleManualSubmit}
+                        />
 
-    const FAIL_REASONS = ['Customer not available', 'Wrong address', 'Customer refused', 'Other'];
-
-    return (
-        <View className="flex-1 bg-black">
-            {flow === 'idle' && (
-                <CameraView
-                    style={StyleSheet.absoluteFillObject}
-                    facing="back"
-                    onBarcodeScanned={handleBarcodeScanned}
-                />
-            )}
-
-            {/* Overlay */}
-            {flow === 'idle' && (
-                <View style={[styles.overlay, StyleSheet.absoluteFillObject]} pointerEvents="none">
-                    <View style={styles.topOverlay} />
-                    <View style={styles.middleRow}>
-                        <View style={styles.sideOverlay} />
-                        <View style={styles.cutout}>
-                            {(['topLeft', 'topRight', 'bottomLeft', 'bottomRight'] as const).map(pos => (
-                                <View key={pos} style={[styles.corner, styles[pos]]} />
+                        {/* Quick pick chips */}
+                        <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-400 uppercase tracking-widest mb-2 text-center">
+                            Quick Demo — tap a shipment
+                        </Text>
+                        <View className="flex-row flex-wrap gap-2 justify-center mb-6">
+                            {SHIPMENTS.slice(0, 6).map(s => (
+                                <TouchableOpacity
+                                    key={s.id}
+                                    onPress={() => navigate(s.trackingId, s.deliveryStatus === 'Pending' ? 'pickup' : 'delivery')}
+                                    className="bg-slate-50 border border-slate-200 rounded-full px-4 py-2">
+                                    <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 12 }} className="text-brand-secondary">
+                                        {s.trackingId}
+                                    </Text>
+                                </TouchableOpacity>
                             ))}
                         </View>
-                        <View style={styles.sideOverlay} />
-                    </View>
-                    <View style={[styles.bottomOverlay, { alignItems: 'center', paddingTop: 36 }]}>
-                        <Text className="text-white font-bold text-lg">Scan shipment QR</Text>
-                        <Text className="text-white/60 text-xs mt-1">Warehouse pickup or delivery completion</Text>
-                    </View>
-                </View>
-            )}
 
-            {/* Header */}
-            {flow === 'idle' && (
-                <View className="absolute top-14 left-6 z-10">
+                        <TouchableOpacity
+                            className={`rounded-lg py-4 items-center ${manualId.trim() ? 'bg-brand-orange' : 'bg-slate-100'}`}
+                            onPress={handleManualSubmit}
+                            disabled={!manualId.trim()}>
+                            <Text style={{ fontFamily: 'Poppins_600SemiBold' }}
+                                className={manualId.trim() ? 'text-white' : 'text-slate-400'}>
+                                Look Up Shipment
+                            </Text>
+                        </TouchableOpacity>
+
+                        {/* Divider */}
+                        <View className="flex-row items-center gap-3 my-4">
+                            <View className="flex-1 h-px bg-slate-100" />
+                            <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 11 }} className="text-slate-400">or</Text>
+                            <View className="flex-1 h-px bg-slate-100" />
+                        </View>
+
+                        {/* Scan from image */}
+                        <TouchableOpacity
+                            onPress={handleScanFromImage}
+                            className="bg-brand-secondary/10 rounded-lg py-3.5 flex-row items-center justify-center gap-2 border border-brand-secondary/20">
+                            <Ionicons name="image-outline" size={18} color="#1e4b69" />
+                            <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 13 }} className="text-brand-secondary">
+                                Pick QR image from photos
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        );
+    }
+
+    // ── Camera mode ────────────────────────────────────────────────────────────
+    return (
+        <View className="flex-1 bg-black">
+            <CameraView
+                style={StyleSheet.absoluteFillObject}
+                facing="back"
+                onBarcodeScanned={handleBarcodeScanned}
+            />
+
+            {/* Dark overlay with cutout */}
+            <View style={[styles.overlay, StyleSheet.absoluteFillObject]} pointerEvents="none">
+                <View style={styles.topOverlay} />
+                <View style={styles.middleRow}>
+                    <View style={styles.sideOverlay} />
+                    <View style={styles.cutout}>
+                        {(['topLeft', 'topRight', 'bottomLeft', 'bottomRight'] as const).map(pos => (
+                            <View key={pos} style={[styles.corner, styles[pos]]} />
+                        ))}
+                    </View>
+                    <View style={styles.sideOverlay} />
+                </View>
+                <View style={[styles.bottomOverlay, { alignItems: 'center', paddingTop: 36 }]}>
+                    <Text style={{ fontFamily: 'Manrope_600SemiBold', color: 'white', fontSize: 16 }}>
+                        Scan shipment QR code
+                    </Text>
+                    <Text style={{ fontFamily: 'Manrope_400Regular', color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 4 }}>
+                        Point camera at label barcode or QR
+                    </Text>
+                    <TouchableOpacity
+                        onPress={handleScanFromImage}
+                        style={{ marginTop: 20, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}>
+                        <Ionicons name="image-outline" size={16} color="white" />
+                        <Text style={{ fontFamily: 'Manrope_500Medium', color: 'white', fontSize: 13 }}>Pick QR from photos</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {/* Top controls */}
+            <SafeAreaView className="absolute top-0 left-0 right-0 z-10">
+                <View className="flex-row justify-between items-center px-5 pt-4">
                     <TouchableOpacity
                         className="w-11 h-11 bg-black/40 rounded-full items-center justify-center border border-white/20"
                         onPress={() => router.back()}>
                         <Ionicons name="arrow-back" size={20} color="white" />
                     </TouchableOpacity>
-                </View>
-            )}
-
-            {/* ── Pickup Confirm Panel ── */}
-            {flow === 'pickup_confirm' && (
-                <View className="flex-1 bg-[#F9FAFB] pt-16 px-6">
-                    <TouchableOpacity onPress={() => setFlow('idle')} className="flex-row items-center mb-6">
-                        <Ionicons name="arrow-back" size={20} color="#1e4b69" />
-                        <Text className="text-[#1e4b69] font-medium ml-2">Rescan</Text>
-                    </TouchableOpacity>
-
-                    <View className="bg-white rounded-lg p-5 border border-gray-100 mb-4">
-                        <View className="items-center mb-4">
-                            <View className="w-16 h-16 bg-[#e6f0f5] rounded-full items-center justify-center mb-3">
-                                <Ionicons name="cube" size={30} color="#1e4b69" />
-                            </View>
-                            <Text className="text-gray-900 font-extrabold text-xl">{scannedId}</Text>
-                            <Text className="text-gray-500 text-sm mt-1">Assigned to you — ready for pickup</Text>
-                        </View>
-                        <View className="bg-[#e6f0f5] rounded-xl p-3">
-                            <Text className="text-[#1e4b69] font-medium text-sm text-center">
-                                Tap Confirm Pickup to change status to "Out for Delivery"
-                            </Text>
-                        </View>
-                    </View>
-
                     <TouchableOpacity
-                        className="bg-[#1e4b69] py-4 rounded-lg items-center"
-                        onPress={handlePickupConfirm}>
-                        <Text className="text-white font-extrabold text-lg">Confirm Pickup</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        className="mt-3 py-3 items-center"
-                        onPress={() => setFlow('failed')}>
-                        <Text className="text-gray-400 font-medium">Mark as Failed / Attempted</Text>
+                        className="bg-black/40 border border-white/20 rounded-full px-4 h-11 items-center justify-center flex-row gap-2"
+                        onPress={() => setMode('manual')}>
+                        <Ionicons name="keypad-outline" size={16} color="white" />
+                        <Text style={{ fontFamily: 'Manrope_500Medium', color: 'white', fontSize: 13 }}>Enter manually</Text>
                     </TouchableOpacity>
                 </View>
-            )}
-
-            {/* ── Delivery Complete Panel ── */}
-            {flow === 'delivery_complete' && (
-                <ScrollView className="flex-1 bg-[#F9FAFB] pt-16 px-6">
-                    <TouchableOpacity onPress={() => setFlow('idle')} className="flex-row items-center mb-6">
-                        <Ionicons name="arrow-back" size={20} color="#1e4b69" />
-                        <Text className="text-[#1e4b69] font-medium ml-2">Rescan</Text>
-                    </TouchableOpacity>
-
-                    <Text className="text-gray-900 font-extrabold text-xl mb-1">Complete Delivery</Text>
-                    <Text className="text-gray-500 text-sm mb-6">{scannedId} — Capture proof of delivery</Text>
-
-                    {/* Signature */}
-                    <View className="bg-white rounded-lg p-4 border border-gray-100 mb-3">
-                        <Text className="text-gray-700 font-bold mb-2">Customer Signature</Text>
-                        <TouchableOpacity className="h-24 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl items-center justify-center">
-                            <Ionicons name="create-outline" size={24} color="#9CA3AF" />
-                            <Text className="text-gray-400 text-xs mt-1">Tap to capture signature</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Delivery Photo */}
-                    <View className="bg-white rounded-lg p-4 border border-gray-100 mb-3">
-                        <Text className="text-gray-700 font-bold mb-2">Delivery Photo</Text>
-                        <TouchableOpacity className="h-24 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl items-center justify-center">
-                            <Ionicons name="camera-outline" size={24} color="#9CA3AF" />
-                            <Text className="text-gray-400 text-xs mt-1">Tap to take photo</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Notes */}
-                    <View className="bg-white rounded-lg p-4 border border-gray-100 mb-5">
-                        <Text className="text-gray-700 font-bold mb-2">Notes (optional)</Text>
-                        <TextInput
-                            className="text-gray-700 text-sm min-h-[60px]"
-                            placeholder='e.g. "Left with building security"'
-                            placeholderTextColor="#9CA3AF"
-                            multiline
-                            value={notes}
-                            onChangeText={setNotes}
-                        />
-                    </View>
-
-                    <TouchableOpacity
-                        className="bg-green-600 py-4 rounded-lg items-center mb-3"
-                        onPress={handleCompleteDelivery}>
-                        <Text className="text-white font-extrabold text-lg">Complete Delivery</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        className="border border-gray-200 py-3 rounded-lg items-center mb-10"
-                        onPress={() => setFlow('failed')}>
-                        <Text className="text-gray-500 font-medium">Mark as Attempted / Failed</Text>
-                    </TouchableOpacity>
-                </ScrollView>
-            )}
-
-            {/* ── Failed Flow Panel ── */}
-            {flow === 'failed' && (
-                <View className="flex-1 bg-[#F9FAFB] pt-16 px-6">
-                    <TouchableOpacity onPress={() => setFlow('idle')} className="flex-row items-center mb-6">
-                        <Ionicons name="arrow-back" size={20} color="#1e4b69" />
-                        <Text className="text-[#1e4b69] font-medium ml-2">Back</Text>
-                    </TouchableOpacity>
-                    <Text className="text-gray-900 font-extrabold text-xl mb-1">Failed / Attempted</Text>
-                    <Text className="text-gray-500 text-sm mb-6">{scannedId ?? '—'} — Select a reason:</Text>
-                    {FAIL_REASONS.map(reason => (
-                        <TouchableOpacity
-                            key={reason}
-                            className="bg-white border border-gray-200 rounded-lg p-4 mb-3 flex-row items-center justify-between"
-                            onPress={() => handleFailed(reason)}>
-                            <Text className="text-gray-800 font-semibold">{reason}</Text>
-                            <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            )}
+            </SafeAreaView>
         </View>
     );
 }

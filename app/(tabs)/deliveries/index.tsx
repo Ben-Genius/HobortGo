@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DELIVERY_FILTERS = ['All', 'Pending', 'Assigned', 'Out', 'Completed', 'Failed'] as const;
@@ -264,10 +264,12 @@ export default function AdminDeliveriesScreen() {
                 contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 110 }}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
-                    <View className="items-center mt-20 px-12">
-                        <View className="w-16 h-16 bg-slate-50 rounded-full items-center justify-center mb-4 border border-slate-100">
-                            <Ionicons name="bicycle-outline" size={32} color="#CBD5E1" />
-                        </View>
+                    <View className="items-center mt-16 px-12">
+                        <Image
+                            source={require('../../../assets/images/illustrations/delivery_rider.webp')}
+                            style={{ width: 120, height: 100, marginBottom: 12 }}
+                            resizeMode="contain"
+                        />
                         <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-lg text-center">
                             Dispatch Is Clear
                         </Text>

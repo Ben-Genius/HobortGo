@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const STATUS_FILTERS = ['All', 'Received', 'In Transit', 'Arrived', 'Ready', 'Delivered'] as const;
@@ -206,10 +206,12 @@ export default function AdminShipmentsScreen() {
                 contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 110 }}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
-                    <View className="items-center mt-20 px-12">
-                        <View className="w-16 h-16 bg-slate-50 rounded-full items-center justify-center mb-4 border border-slate-100">
-                            <Ionicons name="cube-outline" size={32} color="#CBD5E1" />
-                        </View>
+                    <View className="items-center mt-16 px-12">
+                        <Image
+                            source={require('../../../assets/images/illustrations/shipment_box.webp')}
+                            style={{ width: 120, height: 120, marginBottom: 16 }}
+                            resizeMode="contain"
+                        />
                         <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-lg text-center">
                             No Shipments Found
                         </Text>
