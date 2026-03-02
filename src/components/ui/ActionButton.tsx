@@ -22,16 +22,16 @@ export function ActionButton({
 
     switch (variant) {
         case 'primary':
-            bgClass = 'bg-[#f0782d]'; // HobortGo Orange
+            bgClass = 'bg-brand-orange';
             textClass = 'text-white';
             break;
         case 'secondary':
-            bgClass = 'bg-[#e6f0f5]'; // Light Blue
-            textClass = 'text-[#1e4b69]';
+            bgClass = 'bg-brand-navy';
+            textClass = 'text-white';
             break;
         case 'outline':
-            bgClass = 'bg-transparent border-2 border-gray-200';
-            textClass = 'text-gray-700';
+            bgClass = 'bg-transparent border-2 border-slate-200';
+            textClass = 'text-brand-slate';
             break;
         case 'danger':
             bgClass = 'bg-red-500';
@@ -43,15 +43,15 @@ export function ActionButton({
 
     return (
         <TouchableOpacity
-            className={`py-4 rounded-lg items-center justify-center flex-row ${bgClass} ${opacity} ${className}`}
+            className={`py-5 rounded-3xl items-center justify-center flex-row ${bgClass} ${opacity} ${className}`}
             disabled={disabled || isLoading}
             activeOpacity={0.8}
             {...props}
         >
             {isLoading ? (
-                <ActivityIndicator color={variant === 'primary' || variant === 'danger' ? 'white' : '#f0782d'} />
+                <ActivityIndicator color="white" />
             ) : (
-                <Text className={`font-bold text-lg ${textClass}`}>{label}</Text>
+                <Text className={`font-black text-base uppercase tracking-widest ${textClass}`}>{label}</Text>
             )}
         </TouchableOpacity>
     );

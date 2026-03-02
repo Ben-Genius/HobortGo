@@ -17,23 +17,28 @@ export function CustomInput<T extends FieldValues>({
     ...textInputProps
 }: CustomInputProps<T>) {
     return (
-        <View className="mb-4">
-            <Text className="text-sm font-semibold text-gray-700 mb-1">{label}</Text>
+        <View className="mb-2">
+            {label && (
+                <Text className="text-slate-500 font-bold text-xs uppercase tracking-widest mb-2 ml-1">
+                    {label}
+                </Text>
+            )}
             <Controller
                 control={control}
                 name={name}
                 render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                        className={`border rounded-lg px-4 py-3 bg-white text-base ${error ? 'border-red-500' : 'border-gray-300'} focus:border-blue-500`}
+                        className={`rounded-3xl px-6 py-4 bg-slate-50 text-brand-slate text-base border-2 ${error ? 'border-red-100 bg-red-50/30' : 'border-transparent focus:border-brand-orange/20 focus:bg-white'
+                            }`}
                         onBlur={onBlur}
                         onChangeText={onChange}
                         value={value}
-                        placeholderTextColor="#9ca3af"
+                        placeholderTextColor="#94A3B8"
                         {...textInputProps}
                     />
                 )}
             />
-            {error && <Text className="text-xs text-red-500 mt-1">{error}</Text>}
+            {error && <Text className="text-[10px] uppercase font-bold text-red-500 mt-2 ml-4 tracking-tighter">{error}</Text>}
         </View>
     );
 }

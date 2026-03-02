@@ -56,64 +56,69 @@ export default function AdminDeliveriesScreen() {
     const renderItem = ({ item }: { item: typeof DUMMY_DELIVERIES[0] }) => {
         const colors = STATUS_COLORS[item.status] ?? STATUS_COLORS.Pending;
         return (
-            <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
+            <View className="bg-slate-50 rounded-3xl p-6 mb-4 border border-slate-100">
                 {/* Top row */}
-                <View className="flex-row justify-between items-start mb-2">
-                    <Text className="text-gray-900 font-extrabold text-base">{item.trackingId}</Text>
-                    <View style={{ backgroundColor: colors.bg }} className="px-3 py-1 rounded-full">
-                        <Text style={{ color: colors.text }} className="text-xs font-bold">{item.status}</Text>
+                <View className="flex-row justify-between items-start mb-4">
+                    <Text className="text-brand-slate font-black text-lg">{item.trackingId}</Text>
+                    <View style={{ backgroundColor: colors.bg }} className="px-3 py-1.5 rounded-xl">
+                        <Text style={{ color: colors.text }} className="text-[10px] font-black uppercase tracking-tighter">{item.status}</Text>
                     </View>
                 </View>
 
-                {/* Info rows */}
-                <View className="flex-row items-center mb-1.5">
-                    <Ionicons name="person-outline" size={13} color="#9CA3AF" />
-                    <Text className="text-gray-700 font-semibold text-sm ml-1.5">{item.client}</Text>
-                    <Text className="text-gray-300 mx-1.5">·</Text>
-                    <Ionicons name="call-outline" size={13} color="#9CA3AF" />
-                    <Text className="text-gray-500 text-sm ml-1">{item.phone}</Text>
-                </View>
-                <View className="flex-row items-center mb-1.5">
-                    <Ionicons name="location-outline" size={13} color="#9CA3AF" />
-                    <Text className="text-gray-500 text-xs ml-1.5 flex-1">{item.address}</Text>
-                </View>
-                <View className="flex-row items-center mb-3">
-                    <Ionicons name="time-outline" size={13} color="#9CA3AF" />
-                    <Text className="text-gray-400 text-xs ml-1.5">{item.time}</Text>
-                    {item.assignedTo && (
-                        <>
-                            <Text className="text-gray-300 mx-1.5">·</Text>
-                            <Ionicons name="bicycle-outline" size={13} color="#9CA3AF" />
-                            <Text className="text-gray-400 text-xs ml-1">{item.assignedTo}</Text>
-                        </>
-                    )}
+                {/* Info blocks */}
+                <View className="space-y-3 mb-6">
+                    <View className="flex-row items-center">
+                        <View className="w-8 h-8 bg-white rounded-xl items-center justify-center border border-slate-100">
+                            <Ionicons name="person-outline" size={14} color="#64748B" />
+                        </View>
+                        <Text className="text-brand-slate font-bold text-sm ml-3">{item.client}</Text>
+                    </View>
+                    <View className="flex-row items-center">
+                        <View className="w-8 h-8 bg-white rounded-xl items-center justify-center border border-slate-100">
+                            <Ionicons name="location-outline" size={14} color="#64748B" />
+                        </View>
+                        <Text className="text-slate-500 text-xs ml-3 flex-1">{item.address}</Text>
+                    </View>
+                    <View className="flex-row items-center">
+                        <View className="w-8 h-8 bg-white rounded-xl items-center justify-center border border-slate-100">
+                            <Ionicons name="time-outline" size={14} color="#64748B" />
+                        </View>
+                        <Text className="text-slate-400 text-[10px] font-bold ml-3 uppercase tracking-tighter">{item.time}</Text>
+                        {item.assignedTo && (
+                            <View className="flex-row items-center ml-4">
+                                <View className="w-2 h-2 bg-brand-orange rounded-full mr-2" />
+                                <Text className="text-brand-slate font-bold text-[10px] uppercase">{item.assignedTo}</Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
 
-                {/* Completed proof */}
+                {/* Conditional Proof/Fail blocks */}
                 {item.proof && (
-                    <View className="bg-green-50 border border-green-200 rounded-xl p-3 mb-3">
-                        <Text className="text-green-700 font-semibold text-xs">
-                            ✓ Delivered at {item.proof.time} · Photo + Signature captured
+                    <View className="bg-green-50 border border-green-100 rounded-2xl p-4 mb-4 flex-row items-center">
+                        <Ionicons name="checkmark-circle-outline" size={18} color="#16A34A" />
+                        <Text className="text-green-700 font-bold text-xs ml-2">
+                            Delivered at {item.proof.time}
                         </Text>
                     </View>
                 )}
 
-                {/* Failed reason */}
                 {item.status === 'Failed' && (item as any).reason && (
-                    <View className="bg-red-50 border border-red-200 rounded-xl p-3 mb-3">
-                        <Text className="text-red-600 font-semibold text-xs">
-                            ✕ {(item as any).reason}
+                    <View className="bg-red-50 border border-red-100 rounded-2xl p-4 mb-4 flex-row items-center">
+                        <Ionicons name="alert-circle" size={18} color="#DC2626" />
+                        <Text className="text-red-600 font-bold text-xs ml-2">
+                            {(item as any).reason}
                         </Text>
                     </View>
                 )}
 
-                {/* Action button */}
+                {/* Actions */}
                 {item.status === 'Pending' && (
                     <TouchableOpacity
-                        className="bg-[#1e4b69] py-2.5 rounded-xl items-center flex-row justify-center gap-2"
+                        className="bg-brand-slate py-4 rounded-2xl items-center flex-row justify-center gap-2"
                         onPress={() => handleAssign(item.id)}>
-                        <Ionicons name="person-add" size={16} color="white" />
-                        <Text className="text-white font-bold text-sm">Assign Delivery Person</Text>
+                        <Ionicons name="person-add-outline" size={16} color="white" />
+                        <Text className="text-white font-black uppercase tracking-widest text-xs">Assign Driver</Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -121,29 +126,35 @@ export default function AdminDeliveriesScreen() {
     };
 
     return (
-        <View className="flex-1 bg-[#F9FAFB]">
-            {/* Header */}
-            <View className="bg-white pt-14 pb-4 px-6 border-b border-gray-100">
-                <View className="flex-row justify-between items-center mb-4">
-                    <Text className="text-2xl font-extrabold text-gray-900">Deliveries</Text>
-                    <View className="bg-[#fff0e6] px-3 py-1 rounded-full">
-                        <Text className="text-[#f0782d] font-bold text-xs">
-                            {deliveries.filter(d => d.status === 'Pending').length} pending
+        <View className="flex-1 bg-white">
+            {/* Header Area */}
+            <View className="pt-16 pb-8 px-8">
+                <View className="flex-row justify-between items-center mb-8">
+                    <View>
+                        <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest">Operations</Text>
+                        <Text className="text-brand-slate text-3xl font-black mt-1">Deliveries</Text>
+                    </View>
+                    <View className="bg-brand-orange/10 px-4 py-2 rounded-2xl">
+                        <Text className="text-brand-orange font-black text-xs uppercase">
+                            {deliveries.filter(d => d.status === 'Pending').length} Pending
                         </Text>
                     </View>
                 </View>
 
-                {/* Delivery Person Loads */}
-                <View className="flex-row gap-2 mb-4">
+                {/* Dispatch Board (Driver Stats) */}
+                <Text className="text-brand-slate font-black text-lg mb-4">Dispatcher</Text>
+                <View className="flex-row gap-3 mb-8">
                     {DELIVERY_PERSONS.map(dp => (
-                        <View key={dp.id} className="flex-1 bg-gray-50 rounded-xl p-2 items-center border border-gray-100">
-                            <View className="w-7 h-7 bg-[#1e4b69] rounded-full items-center justify-center mb-1">
-                                <Text className="text-white font-bold text-xs">{dp.name.charAt(0)}</Text>
+                        <View key={dp.id} className="flex-1 bg-slate-50 rounded-3xl p-4 items-center border border-slate-100">
+                            <View className="w-10 h-10 bg-brand-slate rounded-2xl items-center justify-center mb-3">
+                                <Text className="text-white font-black text-sm">{dp.name.charAt(0)}</Text>
                             </View>
-                            <Text className="text-gray-700 font-semibold text-[10px] text-center" numberOfLines={1}>
+                            <Text className="text-brand-slate font-bold text-[10px] text-center uppercase mb-1" numberOfLines={1}>
                                 {dp.name.split(' ')[0]}
                             </Text>
-                            <Text className="text-[#f0782d] font-bold text-xs">{dp.active}</Text>
+                            <View className="bg-white px-2 py-0.5 rounded-lg border border-slate-100">
+                                <Text className="text-brand-orange font-black text-xs">{dp.active}</Text>
+                            </View>
                         </View>
                     ))}
                 </View>
@@ -157,8 +168,10 @@ export default function AdminDeliveriesScreen() {
                     renderItem={({ item }) => (
                         <TouchableOpacity
                             onPress={() => setActiveFilter(item)}
-                            className={`px-4 py-2 rounded-full mr-2 ${activeFilter === item ? 'bg-[#1e4b69]' : 'bg-gray-100'}`}>
-                            <Text className={`text-xs font-bold ${activeFilter === item ? 'text-white' : 'text-gray-500'}`}>
+                            className={`px-5 py-2.5 rounded-2xl mr-3 border ${activeFilter === item ? 'bg-brand-slate border-brand-slate' : 'bg-white border-slate-100'
+                                }`}>
+                            <Text className={`text-[10px] uppercase font-black tracking-widest ${activeFilter === item ? 'text-white' : 'text-slate-400'
+                                }`}>
                                 {item}
                             </Text>
                         </TouchableOpacity>
@@ -170,12 +183,15 @@ export default function AdminDeliveriesScreen() {
                 data={filtered}
                 keyExtractor={item => item.id}
                 renderItem={renderItem}
-                contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+                contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 100 }}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
-                    <View className="items-center mt-20">
-                        <Ionicons name="bicycle-outline" size={48} color="#D1D5DB" />
-                        <Text className="text-gray-400 mt-3 font-medium">No deliveries in this category</Text>
+                    <View className="items-center mt-20 px-12">
+                        <View className="w-20 h-20 bg-slate-50 rounded-full items-center justify-center mb-6 border border-slate-100">
+                            <Ionicons name="bicycle-outline" size={40} color="#CBD5E1" />
+                        </View>
+                        <Text className="text-brand-slate text-lg font-black text-center">Dispatch Is Clear</Text>
+                        <Text className="text-slate-400 text-sm text-center mt-2 font-medium">No deliveries found in this category.</Text>
                     </View>
                 }
             />

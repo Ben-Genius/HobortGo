@@ -29,128 +29,99 @@ export default function AdminDashboardScreen() {
     const user = useAuthStore(state => state.user);
 
     return (
-        <ScrollView className="flex-1 bg-[#F9FAFB]" showsVerticalScrollIndicator={false}>
-            {/* Header */}
-            <View className="bg-[#1e4b69] pt-14 pb-8 px-6 rounded-b-[32px]">
-                <View className="flex-row justify-between items-center mb-6">
+        <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
+            {/* Header Area */}
+            <View className="pt-16 pb-8 px-8">
+                <View className="flex-row justify-between items-center">
                     <View>
-                        <Text className="text-white/70 text-sm font-medium">Good day 👋</Text>
-                        <Text className="text-white text-xl font-extrabold mt-0.5">
-                            {user?.name ?? user?.email?.split('@')[0] ?? 'Admin'}
+                        <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest">Dashboard</Text>
+                        <Text className="text-brand-slate text-3xl font-black mt-1">
+                            Hello, <Text className="text-brand-orange">{user?.name?.split(' ')[0] ?? 'Admin'}</Text>
                         </Text>
                     </View>
-                    <View className="flex-row items-center gap-3">
-                        <TouchableOpacity
-                            className="w-10 h-10 bg-white/10 rounded-full items-center justify-center border border-white/20"
-                            onPress={() => router.push('/(tabs)/notifications' as any)}>
-                            <Ionicons name="notifications" size={18} color="white" />
-                        </TouchableOpacity>
-                        <View className="w-10 h-10 bg-[#f0782d] rounded-full items-center justify-center">
-                            <Text className="text-white font-extrabold text-base">
-                                {user?.email?.charAt(0).toUpperCase() ?? 'A'}
-                            </Text>
-                        </View>
-                    </View>
+                    <TouchableOpacity
+                        className="w-12 h-12 bg-slate-50 rounded-2xl items-center justify-center border border-slate-100"
+                        onPress={() => router.push('/(tabs)/notifications' as any)}>
+                        <Ionicons name="notifications-outline" size={22} color="#0F172A" />
+                        <View className="absolute top-3 right-3 w-2 h-2 bg-brand-orange rounded-full border-2 border-white" />
+                    </TouchableOpacity>
                 </View>
 
-                {/* Hero stats row */}
-                <View className="bg-white/10 rounded-2xl p-4 flex-row justify-between border border-white/10">
-                    <View className="items-center flex-1">
-                        <Text className="text-white font-extrabold text-2xl">48</Text>
-                        <Text className="text-white/60 text-xs mt-0.5">Total Today</Text>
-                    </View>
-                    <View className="w-px bg-white/20" />
-                    <View className="items-center flex-1">
-                        <Text className="text-[#f0782d] font-extrabold text-2xl">8</Text>
-                        <Text className="text-white/60 text-xs mt-0.5">Pending</Text>
-                    </View>
-                    <View className="w-px bg-white/20" />
-                    <View className="items-center flex-1">
-                        <Text className="text-green-400 font-extrabold text-2xl">11</Text>
-                        <Text className="text-white/60 text-xs mt-0.5">Delivered</Text>
-                    </View>
+                {/* Modern Search Bar */}
+                <View className="mt-8 bg-slate-50 px-6 py-4 rounded-3xl flex-row items-center border border-slate-100">
+                    <Ionicons name="search-outline" size={20} color="#94A3B8" />
+                    <Text className="text-slate-400 ml-3 font-medium">Track your shipment...</Text>
+                    <TouchableOpacity className="ml-auto w-8 h-8 bg-brand-orange rounded-xl items-center justify-center">
+                        <Ionicons name="scan-outline" size={18} color="white" />
+                    </TouchableOpacity>
                 </View>
             </View>
 
-            <View className="px-6 mt-6">
-                {/* Flagged Alert Banner */}
-                {FLAGGED.length > 0 && (
-                    <TouchableOpacity className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 flex-row items-center">
-                        <View className="w-10 h-10 bg-red-100 rounded-full items-center justify-center mr-3">
-                            <Ionicons name="warning" size={20} color="#dc2626" />
-                        </View>
-                        <View className="flex-1">
-                            <Text className="text-red-700 font-bold text-sm">
-                                {FLAGGED.length} flagged shipment{FLAGGED.length > 1 ? 's' : ''} require attention
-                            </Text>
-                            <Text className="text-red-500 text-xs mt-0.5">
-                                {FLAGGED.map(f => f.id).join(', ')}
-                            </Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={16} color="#dc2626" />
+            {/* Main Content */}
+            <View className="px-8 flex-1">
+                {/* Banner/Highlight Card */}
+                <View className="bg-brand-orange rounded-3xl p-6 mb-8 overflow-hidden">
+                    <View className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full" />
+                    <Text className="text-white/80 font-bold text-xs uppercase tracking-widest mb-1">Active Deliveries</Text>
+                    <Text className="text-white text-4xl font-black">24</Text>
+                    <Text className="text-white/70 font-medium text-sm mt-2">Packages moving through your fleet today</Text>
+                    <TouchableOpacity className="bg-white/20 self-start mt-4 px-4 py-2 rounded-xl">
+                        <Text className="text-white font-bold text-xs">View Report</Text>
                     </TouchableOpacity>
-                )}
-
-                {/* Summary Cards */}
-                <Text className="text-gray-900 font-bold text-base mb-3">Today's Overview</Text>
-                <View className="flex-row flex-wrap gap-3 mb-6">
-                    {SUMMARY_CARDS.map(card => (
-                        <View
-                            key={card.label}
-                            className="flex-1 min-w-[44%] rounded-2xl p-4 border border-gray-100 bg-white">
-                            <View
-                                style={{ backgroundColor: card.bg }}
-                                className="w-9 h-9 rounded-full items-center justify-center mb-3">
-                                <Ionicons name={card.icon as any} size={18} color={card.color} />
-                            </View>
-                            <Text style={{ color: card.color }} className="text-2xl font-extrabold">{card.value}</Text>
-                            <Text className="text-gray-500 text-xs mt-0.5 font-medium">{card.label}</Text>
-                        </View>
-                    ))}
                 </View>
 
-                {/* Quick Actions */}
-                <Text className="text-gray-900 font-bold text-base mb-3">Quick Actions</Text>
-                <View className="flex-row gap-3 mb-6">
+                {/* Quick Actions Grid */}
+                <View className="flex-row gap-4 mb-8">
                     <TouchableOpacity
-                        className="flex-1 bg-[#1e4b69] rounded-2xl p-4 flex-row items-center justify-center gap-2"
+                        className="flex-1 bg-brand-slate py-6 rounded-3xl items-center justify-center"
                         onPress={() => router.push('/(tabs)/scan' as any)}>
-                        <Ionicons name="qr-code" size={20} color="white" />
-                        <Text className="text-white font-bold">Scan Package</Text>
+                        <View className="w-12 h-12 bg-white/10 rounded-2xl items-center justify-center mb-3">
+                            <Ionicons name="qr-code" size={24} color="white" />
+                        </View>
+                        <Text className="text-white font-bold text-sm">Scan</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        className="flex-1 bg-[#f0782d] rounded-2xl p-4 flex-row items-center justify-center gap-2"
+                        className="flex-1 bg-slate-50 py-6 rounded-3xl items-center justify-center border border-slate-100"
                         onPress={() => router.push('/(tabs)/deliveries' as any)}>
-                        <Ionicons name="bicycle" size={20} color="white" />
-                        <Text className="text-white font-bold">Assign Delivery</Text>
+                        <View className="w-12 h-12 bg-brand-orange/10 rounded-2xl items-center justify-center mb-3">
+                            <Ionicons name="bicycle-outline" size={24} color="#F0782D" />
+                        </View>
+                        <Text className="text-brand-slate font-bold text-sm">Assign</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        className="flex-1 bg-slate-50 py-6 rounded-3xl items-center justify-center border border-slate-100">
+                        <View className="w-12 h-12 bg-blue-100 rounded-2xl items-center justify-center mb-3">
+                            <Ionicons name="stats-chart-outline" size={24} color="#3B82F6" />
+                        </View>
+                        <Text className="text-brand-slate font-bold text-sm">Stats</Text>
                     </TouchableOpacity>
                 </View>
 
-                {/* Recent Scan Activity */}
-                <View className="flex-row justify-between items-center mb-3">
-                    <Text className="text-gray-900 font-bold text-base">Recent Scans</Text>
-                    <TouchableOpacity onPress={() => router.push('/(tabs)/shipments' as any)}>
-                        <Text className="text-[#f0782d] text-sm font-semibold">See all</Text>
+                {/* Recent Activity Section */}
+                <View className="flex-row justify-between items-center mb-4">
+                    <Text className="text-brand-slate font-black text-lg">Recent Scans</Text>
+                    <TouchableOpacity>
+                        <Text className="text-brand-orange font-bold text-sm">See all</Text>
                     </TouchableOpacity>
                 </View>
 
-                <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-8">
+                <View className="mb-10">
                     {RECENT_SCANS.map((scan, idx) => (
                         <View
                             key={scan.id}
-                            className={`flex-row items-center p-4 ${idx < RECENT_SCANS.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                            <View className="w-9 h-9 bg-[#e6f0f5] rounded-full items-center justify-center mr-3">
-                                <Ionicons name="cube" size={16} color="#1e4b69" />
+                            className="flex-row items-center p-5 bg-slate-50 rounded-3xl mb-3 border border-slate-100">
+                            <View className="w-12 h-12 bg-white rounded-2xl items-center justify-center border border-slate-100">
+                                <Ionicons name="cube-outline" size={22} color="#F0782D" />
                             </View>
-                            <View className="flex-1">
-                                <Text className="text-gray-900 font-bold text-sm">{scan.id}</Text>
-                                <Text className="text-gray-400 text-xs">{scan.admin}</Text>
+                            <View className="flex-1 ml-4">
+                                <Text className="text-brand-slate font-bold text-sm">{scan.id}</Text>
+                                <Text className="text-slate-400 text-xs mt-0.5">{scan.admin}</Text>
                             </View>
                             <View className="items-end">
-                                <View className="bg-[#e6f0f5] px-2 py-0.5 rounded-full mb-1">
-                                    <Text className="text-[#1e4b69] text-[10px] font-bold">{scan.status}</Text>
+                                <Text className="text-brand-slate font-bold text-xs">{scan.time}</Text>
+                                <View className="mt-1 bg-green-100 px-2 py-0.5 rounded-lg">
+                                    <Text className="text-green-700 text-[10px] font-black uppercase">{scan.status}</Text>
                                 </View>
-                                <Text className="text-gray-400 text-xs">{scan.time}</Text>
                             </View>
                         </View>
                     ))}

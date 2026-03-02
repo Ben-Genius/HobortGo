@@ -41,59 +41,60 @@ export default function DeliveryPersonHomeScreen() {
         const isExpanded = expanded === item.id;
         return (
             <TouchableOpacity
-                activeOpacity={0.85}
+                activeOpacity={1}
                 onPress={() => setExpanded(isExpanded ? null : item.id)}
-                className="bg-white rounded-2xl mb-3 border border-gray-100 overflow-hidden">
-                <View className="p-4">
-                    <View className="flex-row justify-between items-start mb-2">
+                className="bg-slate-50 rounded-3xl mb-4 border border-slate-100 overflow-hidden">
+                <View className="p-6">
+                    <View className="flex-row justify-between items-start mb-4">
                         <View className="flex-row items-center">
-                            <View style={{ backgroundColor: cfg.dot }} className="w-2.5 h-2.5 rounded-full mr-2 mt-1" />
-                            <Text className="text-gray-900 font-extrabold text-base">{item.trackingId}</Text>
+                            <View style={{ backgroundColor: cfg.dot }} className="w-2.5 h-2.5 rounded-full mr-3" />
+                            <Text className="text-brand-slate font-black text-lg">{item.trackingId}</Text>
                         </View>
-                        <View style={{ backgroundColor: cfg.bg }} className="px-3 py-1 rounded-full flex-row items-center gap-1">
-                            <Ionicons name={cfg.icon as any} size={11} color={cfg.text} />
-                            <Text style={{ color: cfg.text }} className="text-[10px] font-bold">{item.status}</Text>
+                        <View style={{ backgroundColor: cfg.bg }} className="px-3 py-1.5 rounded-xl">
+                            <Text style={{ color: cfg.text }} className="text-[10px] font-black uppercase tracking-tighter">{item.status}</Text>
                         </View>
                     </View>
-                    <View className="flex-row items-center mb-1">
-                        <Ionicons name="person-outline" size={13} color="#9CA3AF" />
-                        <Text className="text-gray-700 font-semibold text-sm ml-1.5">{item.client}</Text>
-                    </View>
-                    <View className="flex-row items-center mb-1">
-                        <Ionicons name="location-outline" size={13} color="#9CA3AF" />
-                        <Text className="text-gray-500 text-xs ml-1.5 flex-1" numberOfLines={1}>{item.address}</Text>
-                    </View>
-                    <View className="flex-row items-center">
-                        <Ionicons name="time-outline" size={13} color="#9CA3AF" />
-                        <Text className="text-gray-400 text-xs ml-1.5">{item.window}</Text>
+
+                    <View className="space-y-3">
+                        <View className="flex-row items-center">
+                            <View className="w-8 h-8 bg-white rounded-xl items-center justify-center border border-slate-100">
+                                <Ionicons name="person-outline" size={14} color="#64748B" />
+                            </View>
+                            <Text className="text-brand-slate font-bold text-sm ml-3">{item.client}</Text>
+                        </View>
+                        <View className="flex-row items-center">
+                            <View className="w-8 h-8 bg-white rounded-xl items-center justify-center border border-slate-100">
+                                <Ionicons name="location-outline" size={14} color="#64748B" />
+                            </View>
+                            <Text className="text-slate-500 text-xs ml-3 flex-1" numberOfLines={1}>{item.address}</Text>
+                        </View>
                     </View>
                 </View>
 
-                {/* Expanded panel */}
                 {isExpanded && (
-                    <View className="border-t border-gray-100 px-4 pb-4 pt-3 bg-gray-50">
-                        <View className="flex-row gap-2">
+                    <View className="px-6 pb-6 pt-2 bg-slate-100/30">
+                        <View className="flex-row gap-3">
                             <TouchableOpacity
-                                className="flex-1 bg-[#1e4b69] py-2.5 rounded-xl flex-row items-center justify-center gap-1.5"
+                                className="flex-1 bg-brand-slate py-4 rounded-2xl flex-row items-center justify-center gap-2"
                                 onPress={() => handleNavigate(item.address)}>
-                                <Ionicons name="navigate" size={15} color="white" />
+                                <Ionicons name="navigate-outline" size={16} color="white" />
                                 <Text className="text-white font-bold text-sm">Navigate</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                className="flex-1 border border-[#1e4b69] py-2.5 rounded-xl flex-row items-center justify-center gap-1.5"
+                                className="flex-1 bg-white py-4 rounded-2xl flex-row items-center justify-center gap-2 border border-slate-200"
                                 onPress={() => Linking.openURL(`tel:${item.phone}`)}>
-                                <Ionicons name="call" size={15} color="#1e4b69" />
-                                <Text className="text-[#1e4b69] font-bold text-sm">Call</Text>
+                                <Ionicons name="call-outline" size={16} color="#0F172A" />
+                                <Text className="text-brand-slate font-bold text-sm">Call</Text>
                             </TouchableOpacity>
-                            {(item.status === 'Out for Delivery' || item.status === 'Pending') && (
-                                <TouchableOpacity
-                                    className="flex-1 bg-[#f0782d] py-2.5 rounded-xl flex-row items-center justify-center gap-1.5"
-                                    onPress={() => router.push('/(tabs-delivery)/scan' as any)}>
-                                    <Ionicons name="qr-code" size={15} color="white" />
-                                    <Text className="text-white font-bold text-sm">Complete</Text>
-                                </TouchableOpacity>
-                            )}
                         </View>
+                        {(item.status === 'Out for Delivery' || item.status === 'Pending') && (
+                            <TouchableOpacity
+                                className="mt-3 bg-brand-orange py-4 rounded-2xl flex-row items-center justify-center gap-2"
+                                onPress={() => router.push('/(tabs-delivery)/scan' as any)}>
+                                <Ionicons name="checkmark-circle-outline" size={18} color="white" />
+                                <Text className="text-white font-black uppercase tracking-widest text-sm">Complete Delivery</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 )}
             </TouchableOpacity>
@@ -101,64 +102,64 @@ export default function DeliveryPersonHomeScreen() {
     };
 
     return (
-        <View className="flex-1 bg-[#F9FAFB]">
+        <View className="flex-1 bg-white">
             {/* Header */}
-            <View className="bg-[#1e4b69] pt-14 pb-6 px-6 rounded-b-[32px]">
-                <View className="flex-row justify-between items-center mb-5">
+            <View className="pt-16 pb-8 px-8">
+                <View className="flex-row justify-between items-center mb-8">
                     <View>
-                        <Text className="text-white/70 text-sm font-medium">Good day 👋</Text>
-                        <Text className="text-white text-xl font-extrabold">
-                            {user?.name ?? user?.email?.split('@')[0] ?? 'Driver'}
+                        <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest">Courier Pro</Text>
+                        <Text className="text-brand-slate text-3xl font-black mt-1">
+                            Hi, <Text className="text-brand-orange">{user?.name?.split(' ')[0] ?? 'Driver'}</Text>
                         </Text>
                     </View>
                     <TouchableOpacity
-                        className="w-10 h-10 bg-white/10 rounded-full items-center justify-center border border-white/20"
+                        className="w-12 h-12 bg-slate-50 rounded-2xl items-center justify-center border border-slate-100"
                         onPress={() => router.push('/(tabs-delivery)/notifications' as any)}>
-                        <Ionicons name="notifications" size={18} color="white" />
+                        <Ionicons name="notifications-outline" size={22} color="#0F172A" />
+                        <View className="absolute top-3 right-3 w-2 h-2 bg-brand-orange rounded-full border-2 border-white" />
                     </TouchableOpacity>
                 </View>
 
-                <View className="bg-white/10 rounded-2xl p-4 flex-row justify-between border border-white/10">
-                    <View className="items-center flex-1">
-                        <Text className="text-white font-extrabold text-2xl">{MY_DELIVERIES.length}</Text>
-                        <Text className="text-white/60 text-xs mt-0.5">Assigned</Text>
+                {/* Status Stats */}
+                <View className="flex-row gap-4">
+                    <View className="flex-1 bg-brand-orange rounded-3xl p-5 overflow-hidden">
+                        <View className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full" />
+                        <Text className="text-white/80 font-bold text-[10px] uppercase tracking-widest">Remaining</Text>
+                        <Text className="text-white text-3xl font-black mt-1">{pending}</Text>
                     </View>
-                    <View className="w-px bg-white/20" />
-                    <View className="items-center flex-1">
-                        <Text className="text-[#f0782d] font-extrabold text-2xl">{pending}</Text>
-                        <Text className="text-white/60 text-xs mt-0.5">Remaining</Text>
-                    </View>
-                    <View className="w-px bg-white/20" />
-                    <View className="items-center flex-1">
-                        <Text className="text-green-400 font-extrabold text-2xl">{completed}</Text>
-                        <Text className="text-white/60 text-xs mt-0.5">Done</Text>
+                    <View className="flex-1 bg-brand-slate rounded-3xl p-5 overflow-hidden">
+                        <View className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full" />
+                        <Text className="text-white/80 font-bold text-[10px] uppercase tracking-widest">Completed</Text>
+                        <Text className="text-white text-3xl font-black mt-1">{completed}</Text>
                     </View>
                 </View>
             </View>
 
-            {/* Quick Scan CTA */}
-            <TouchableOpacity
-                className="mx-6 mt-4 bg-[#f0782d] rounded-2xl p-4 flex-row items-center justify-between shadow-sm"
-                onPress={() => router.push('/(tabs-delivery)/scan' as any)}>
-                <View>
-                    <Text className="text-white font-extrabold text-base">Scan to Start / Complete</Text>
-                    <Text className="text-white/80 text-xs mt-0.5">Scan QR at warehouse or delivery address</Text>
-                </View>
-                <View className="w-10 h-10 bg-white/20 rounded-full items-center justify-center">
-                    <Ionicons name="qr-code" size={22} color="white" />
-                </View>
-            </TouchableOpacity>
+            {/* Quick Actions */}
+            <View className="px-8 mb-6">
+                <TouchableOpacity
+                    className="bg-slate-900 rounded-3xl p-6 flex-row items-center justify-between"
+                    onPress={() => router.push('/(tabs-delivery)/scan' as any)}>
+                    <View>
+                        <Text className="text-white font-black text-lg">Scan & Go</Text>
+                        <Text className="text-white/60 text-xs mt-1">Ready for your next pickup?</Text>
+                    </View>
+                    <View className="w-14 h-14 bg-brand-orange rounded-2xl items-center justify-center">
+                        <Ionicons name="scan" size={28} color="white" />
+                    </View>
+                </TouchableOpacity>
+            </View>
 
-            <View className="flex-row justify-between items-center px-6 mt-5 mb-3">
-                <Text className="text-gray-900 font-bold text-base">Today's Queue</Text>
-                <Text className="text-gray-400 text-xs">Tap to expand</Text>
+            <View className="flex-row justify-between items-center px-8 mb-4">
+                <Text className="text-brand-slate font-black text-lg">Delivery Queue</Text>
+                <Text className="text-slate-400 text-xs font-bold uppercase">{MY_DELIVERIES.length} Total</Text>
             </View>
 
             <FlatList
                 data={MY_DELIVERIES}
                 keyExtractor={item => item.id}
                 renderItem={renderItem}
-                contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
+                contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 100 }}
                 showsVerticalScrollIndicator={false}
             />
         </View>

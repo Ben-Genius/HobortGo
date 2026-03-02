@@ -53,118 +53,128 @@ export default function AdminShipmentDetailScreen() {
     };
 
     return (
-        <ScrollView className="flex-1 bg-[#F9FAFB]" contentContainerStyle={{ paddingBottom: 120 }}>
+        <ScrollView className="flex-1 bg-white" contentContainerStyle={{ paddingBottom: 120 }}>
             {/* Header */}
-            <View className="bg-[#1e4b69] pt-14 pb-6 px-6">
-                <TouchableOpacity onPress={() => router.back()} className="mb-4 flex-row items-center">
-                    <Ionicons name="arrow-back" size={20} color="rgba(255,255,255,0.8)" />
-                    <Text className="text-white/80 ml-2 font-medium">Shipments</Text>
+            <View className="pt-16 pb-8 px-8">
+                <TouchableOpacity
+                    onPress={() => router.back()}
+                    className="w-12 h-12 bg-slate-50 rounded-2xl items-center justify-center border border-slate-100 mb-8">
+                    <Ionicons name="arrow-back-outline" size={22} color="#0F172A" />
                 </TouchableOpacity>
-                <View className="flex-row justify-between items-start">
+
+                <View className="flex-row justify-between items-start mb-4">
                     <View>
-                        <Text className="text-white/60 text-xs mb-1">TRACKING ID</Text>
-                        <Text className="text-white font-extrabold text-2xl">{SHIPMENT.id}</Text>
+                        <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest">Tracking ID</Text>
+                        <Text className="text-brand-slate text-3xl font-black mt-1">{SHIPMENT.id}</Text>
                     </View>
-                    {flagged && (
-                        <View className="bg-red-400 px-3 py-1.5 rounded-full flex-row items-center">
-                            <Ionicons name="flag" size={12} color="white" />
-                            <Text className="text-white text-xs font-bold ml-1">{selectedFlag}</Text>
+                    <View className="bg-brand-orange px-4 py-2 rounded-2xl">
+                        <Text className="text-white text-xs font-black uppercase tracking-tighter">{SHIPMENT.status}</Text>
+                    </View>
+                </View>
+
+                {flagged && (
+                    <View className="bg-red-50 border border-red-100 p-4 rounded-2xl flex-row items-center">
+                        <View className="w-8 h-8 bg-red-100 rounded-xl items-center justify-center mr-3">
+                            <Ionicons name="flag" size={14} color="#EF4444" />
                         </View>
-                    )}
-                </View>
-                <View className="bg-[#f0782d] self-start px-3 py-1 rounded-full mt-2">
-                    <Text className="text-white text-xs font-bold">{SHIPMENT.status}</Text>
-                </View>
+                        <View>
+                            <Text className="text-red-400 text-[10px] font-bold uppercase tracking-widest">Shipment Flagged</Text>
+                            <Text className="text-red-600 font-bold text-sm">{selectedFlag}</Text>
+                        </View>
+                    </View>
+                )}
             </View>
 
-            <View className="px-6 mt-4">
+            <View className="px-8 mt-2">
                 {/* Shipment Info Card */}
-                <View className="bg-white rounded-2xl p-4 mb-4 border border-gray-100">
-                    <Text className="text-gray-900 font-bold text-base mb-3">Shipment Details</Text>
-                    {[
-                        { icon: 'person-outline', label: 'Recipient', value: SHIPMENT.recipient },
-                        { icon: 'call-outline', label: 'Phone', value: SHIPMENT.recipientPhone },
-                        { icon: 'cube-outline', label: 'Sender', value: SHIPMENT.sender },
-                        { icon: 'earth-outline', label: 'Origin', value: SHIPMENT.origin },
-                        { icon: 'scale-outline', label: 'Weight', value: `${SHIPMENT.weight} kg` },
-                        { icon: 'cash-outline', label: 'Declared Value', value: `$${SHIPMENT.declaredValue}` },
-                        { icon: 'document-text-outline', label: 'Notes', value: SHIPMENT.notes },
-                    ].map(row => (
-                        <View key={row.label} className="flex-row items-center py-2.5 border-b border-gray-50 last:border-b-0">
-                            <View className="w-7 h-7 bg-gray-100 rounded-full items-center justify-center mr-3">
-                                <Ionicons name={row.icon as any} size={14} color="#6B7280" />
+                <View className="bg-slate-50 rounded-4xl p-8 mb-6 border border-slate-100">
+                    <Text className="text-brand-slate font-black text-xl mb-6">Details</Text>
+                    <View className="space-y-6">
+                        {[
+                            { icon: 'person-outline', label: 'Recipient', value: SHIPMENT.recipient },
+                            { icon: 'call-outline', label: 'Phone', value: SHIPMENT.recipientPhone },
+                            { icon: 'cube-outline', label: 'Sender', value: SHIPMENT.sender },
+                            { icon: 'earth-outline', label: 'Origin', value: SHIPMENT.origin },
+                            { icon: 'scale-outline', label: 'Weight', value: `${SHIPMENT.weight} kg` },
+                            { icon: 'cash-outline', label: 'Value', value: `$${SHIPMENT.declaredValue}` },
+                            { icon: 'document-text-outline', label: 'Notes', value: SHIPMENT.notes },
+                        ].map(row => (
+                            <View key={row.label} className="flex-row items-start">
+                                <View className="w-9 h-9 bg-white rounded-xl items-center justify-center border border-slate-100 mr-4">
+                                    <Ionicons name={row.icon as any} size={16} color="#64748B" />
+                                </View>
+                                <View className="flex-1">
+                                    <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{row.label}</Text>
+                                    <Text className="text-brand-slate font-bold text-sm mt-0.5">{row.value}</Text>
+                                </View>
                             </View>
-                            <Text className="text-gray-400 text-xs w-28">{row.label}</Text>
-                            <Text className="text-gray-800 font-semibold text-sm flex-1">{row.value}</Text>
-                        </View>
-                    ))}
+                        ))}
+                    </View>
                 </View>
 
                 {/* Status Timeline */}
-                <View className="bg-white rounded-2xl p-4 mb-4 border border-gray-100">
-                    <Text className="text-gray-900 font-bold text-base mb-4">Status Timeline</Text>
+                <View className="bg-slate-50 rounded-4xl p-8 mb-6 border border-slate-100">
+                    <Text className="text-brand-slate font-black text-xl mb-6">Timeline</Text>
                     {TIMELINE.map((step, idx) => (
-                        <View key={idx} className="flex-row mb-3">
-                            <View className="items-center mr-3">
-                                <View className={`w-8 h-8 rounded-full items-center justify-center ${step.done ? 'bg-[#1e4b69]' : 'bg-gray-100'}`}>
+                        <View key={idx} className="flex-row">
+                            <View className="items-center mr-4">
+                                <View className={`w-9 h-9 rounded-xl items-center justify-center border ${step.done ? 'bg-brand-slate border-brand-slate' : 'bg-white border-slate-200'}`}>
                                     {step.done
-                                        ? <Ionicons name="checkmark" size={14} color="white" />
-                                        : <View className="w-2 h-2 bg-gray-300 rounded-full" />}
+                                        ? <Ionicons name="checkmark" size={16} color="white" />
+                                        : <View className="w-2 h-2 bg-slate-200 rounded-full" />}
                                 </View>
                                 {idx < TIMELINE.length - 1 && (
-                                    <View className={`w-0.5 h-6 mt-1 ${step.done ? 'bg-[#1e4b69]/30' : 'bg-gray-200'}`} />
+                                    <View className={`w-0.5 h-8 my-1 ${step.done ? 'bg-brand-slate/20' : 'bg-slate-100'}`} />
                                 )}
                             </View>
-                            <View className="flex-1 pb-3">
-                                <Text className={`font-semibold text-sm ${step.done ? 'text-gray-900' : 'text-gray-400'}`}>
+                            <View className="flex-1 pt-1.5 pb-6">
+                                <Text className={`font-black text-sm uppercase tracking-tight ${step.done ? 'text-brand-slate' : 'text-slate-400'}`}>
                                     {step.status}
                                 </Text>
-                                <Text className="text-gray-400 text-xs">{step.time} · {step.actor}</Text>
+                                <Text className="text-slate-400 text-[10px] font-bold mt-1 uppercase tracking-tighter">
+                                    {step.time} • {step.actor}
+                                </Text>
                             </View>
                         </View>
                     ))}
                 </View>
 
                 {/* Actions */}
-                <View className="bg-white rounded-2xl p-4 mb-4 border border-gray-100">
-                    <Text className="text-gray-900 font-bold text-base mb-3">Actions</Text>
-                    <TouchableOpacity
-                        className="flex-row items-center py-3 border-b border-gray-100"
-                        onPress={handleMarkReady}>
-                        <View className="w-8 h-8 bg-green-100 rounded-full items-center justify-center mr-3">
-                            <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
-                        </View>
-                        <Text className="text-gray-800 font-semibold flex-1">Mark Ready for Pickup / Delivery</Text>
-                        <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        className="flex-row items-center py-3 border-b border-gray-100"
-                        onPress={handleStatusOverride}>
-                        <View className="w-8 h-8 bg-[#fff0e6] rounded-full items-center justify-center mr-3">
-                            <Ionicons name="refresh" size={16} color="#f0782d" />
-                        </View>
-                        <Text className="text-gray-800 font-semibold flex-1">Manual Status Override</Text>
-                        <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
-                    </TouchableOpacity>
-                    <TouchableOpacity className="flex-row items-center py-3">
-                        <View className="w-8 h-8 bg-purple-100 rounded-full items-center justify-center mr-3">
-                            <Ionicons name="camera" size={16} color="#7c3aed" />
-                        </View>
-                        <Text className="text-gray-800 font-semibold flex-1">Upload Damage Photos</Text>
-                        <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
-                    </TouchableOpacity>
+                <View className="bg-slate-900 rounded-4xl p-8 mb-6">
+                    <Text className="text-white font-black text-xl mb-6">Terminal Actions</Text>
+                    <View className="space-y-4">
+                        <TouchableOpacity
+                            className="bg-brand-orange py-5 rounded-2xl flex-row items-center justify-center gap-3"
+                            onPress={handleMarkReady}>
+                            <Ionicons name="checkmark-circle-outline" size={20} color="white" />
+                            <Text className="text-white font-black uppercase tracking-widest text-sm">Mark Ready</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            className="bg-white/10 py-5 rounded-2xl flex-row items-center justify-center gap-3"
+                            onPress={handleStatusOverride}>
+                            <Ionicons name="refresh-outline" size={20} color="white" />
+                            <Text className="text-white font-black uppercase tracking-widest text-sm">Override Status</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            className="bg-white/10 py-5 rounded-2xl flex-row items-center justify-center gap-3">
+                            <Ionicons name="camera-outline" size={20} color="white" />
+                            <Text className="text-white font-black uppercase tracking-widest text-sm">Upload Photos</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {/* Flag Shipment */}
-                <View className="bg-white rounded-2xl p-4 border border-gray-100">
-                    <Text className="text-gray-900 font-bold text-base mb-3">Flag Shipment</Text>
-                    <View className="flex-row flex-wrap gap-2">
+                <View className="bg-slate-50 rounded-4xl p-8 border border-slate-100">
+                    <Text className="text-brand-slate font-black text-xl mb-6">Flag Issue</Text>
+                    <View className="flex-row flex-wrap gap-3">
                         {FLAG_REASONS.map(reason => (
                             <TouchableOpacity
                                 key={reason}
                                 onPress={() => handleFlag(reason)}
-                                className={`px-3 py-2 rounded-xl border ${selectedFlag === reason ? 'bg-red-50 border-red-300' : 'bg-gray-50 border-gray-200'}`}>
-                                <Text className={`text-sm font-semibold ${selectedFlag === reason ? 'text-red-600' : 'text-gray-600'}`}>
+                                className={`px-4 py-3 rounded-2xl border ${selectedFlag === reason ? 'bg-red-500 border-red-500' : 'bg-white border-slate-200'}`}>
+                                <Text className={`text-[10px] font-black uppercase tracking-widest ${selectedFlag === reason ? 'text-white' : 'text-slate-400'}`}>
                                     {reason}
                                 </Text>
                             </TouchableOpacity>

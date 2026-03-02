@@ -43,64 +43,74 @@ export default function AdminShipmentsScreen() {
         const colors = STATUS_COLORS[item.status as StatusFilter] ?? STATUS_COLORS.Received;
         return (
             <TouchableOpacity
-                activeOpacity={0.8}
-                className="bg-white rounded-2xl p-4 mb-3 border border-gray-100 shadow-sm"
+                activeOpacity={1}
+                className="bg-slate-50 rounded-3xl p-6 mb-4 border border-slate-100"
                 onPress={() => router.push(`/(tabs)/shipments/${item.id}` as any)}>
-                <View className="flex-row justify-between items-start mb-2">
+                <View className="flex-row justify-between items-start mb-4">
                     <View className="flex-row items-center">
                         {item.flagged && (
-                            <View className="w-2 h-2 bg-red-500 rounded-full mr-2 mt-1" />
+                            <View className="w-2 h-2 bg-red-500 rounded-full mr-3" />
                         )}
-                        <Text className="text-gray-900 font-extrabold text-base">{item.trackingId}</Text>
+                        <Text className="text-brand-slate font-black text-lg">{item.trackingId}</Text>
                     </View>
-                    <View style={{ backgroundColor: colors.bg }} className="px-3 py-1 rounded-full">
-                        <Text style={{ color: colors.text }} className="text-xs font-bold">{item.status}</Text>
+                    <View style={{ backgroundColor: colors.bg }} className="px-3 py-1.5 rounded-xl">
+                        <Text style={{ color: colors.text }} className="text-[10px] font-black uppercase tracking-tighter">{item.status}</Text>
                     </View>
                 </View>
-                <View className="flex-row items-center mb-2">
-                    <Ionicons name="person-outline" size={13} color="#9CA3AF" />
-                    <Text className="text-gray-600 text-sm ml-1.5 font-medium">{item.recipient}</Text>
-                    <Text className="text-gray-300 mx-2">·</Text>
-                    <Ionicons name="location-outline" size={13} color="#9CA3AF" />
-                    <Text className="text-gray-500 text-sm ml-1">{item.origin}</Text>
-                </View>
-                <View className="flex-row items-center justify-between">
+
+                <View className="space-y-3 mb-4">
                     <View className="flex-row items-center">
-                        <Ionicons name="scale-outline" size={13} color="#9CA3AF" />
-                        <Text className="text-gray-400 text-xs ml-1">{item.weight} kg</Text>
+                        <View className="w-8 h-8 bg-white rounded-xl items-center justify-center border border-slate-100">
+                            <Ionicons name="person-outline" size={14} color="#64748B" />
+                        </View>
+                        <Text className="text-brand-slate font-bold text-sm ml-3">{item.recipient}</Text>
                     </View>
-                    <Text className="text-gray-400 text-xs">{item.date}</Text>
+                    <View className="flex-row items-center">
+                        <View className="w-8 h-8 bg-white rounded-xl items-center justify-center border border-slate-100">
+                            <Ionicons name="location-outline" size={14} color="#64748B" />
+                        </View>
+                        <Text className="text-slate-500 text-xs ml-3">{item.origin}</Text>
+                    </View>
+                </View>
+
+                <View className="flex-row items-center justify-between pt-4 border-t border-slate-200/50">
+                    <View className="flex-row items-center">
+                        <Ionicons name="scale-outline" size={14} color="#94A3B8" />
+                        <Text className="text-slate-400 text-xs font-bold ml-2 uppercase">{item.weight} kg</Text>
+                    </View>
+                    <Text className="text-slate-400 text-xs font-bold uppercase tracking-tighter">{item.date}</Text>
                 </View>
             </TouchableOpacity>
         );
     };
 
     return (
-        <View className="flex-1 bg-[#F9FAFB]">
-            {/* Header */}
-            <View className="bg-white pt-14 pb-4 px-6 border-b border-gray-100">
-                <View className="flex-row justify-between items-center mb-4">
-                    <Text className="text-2xl font-extrabold text-gray-900">Shipments</Text>
-                    <View className="flex-row items-center gap-2">
-                        <View className="bg-[#e6f0f5] px-3 py-1 rounded-full">
-                            <Text className="text-[#1e4b69] font-bold text-xs">{DUMMY_SHIPMENTS.length} total</Text>
-                        </View>
+        <View className="flex-1 bg-white">
+            {/* Header Area */}
+            <View className="pt-16 pb-6 px-8">
+                <View className="flex-row justify-between items-center mb-6">
+                    <View>
+                        <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest">Inventory</Text>
+                        <Text className="text-brand-slate text-3xl font-black mt-1">Shipments</Text>
+                    </View>
+                    <View className="bg-brand-orange/10 px-4 py-2 rounded-2xl">
+                        <Text className="text-brand-orange font-black text-xs uppercase">{filtered.length} Packages</Text>
                     </View>
                 </View>
 
                 {/* Search */}
-                <View className="bg-gray-100 rounded-xl flex-row items-center px-3 py-2.5 mb-4">
-                    <Ionicons name="search-outline" size={18} color="#9CA3AF" />
+                <View className="bg-slate-50 rounded-3xl flex-row items-center px-6 py-4 mb-6 border border-slate-100">
+                    <Ionicons name="search-outline" size={20} color="#94A3B8" />
                     <TextInput
-                        className="flex-1 ml-2 text-gray-800 font-medium text-sm"
-                        placeholder="Search tracking ID or recipient…"
-                        placeholderTextColor="#9CA3AF"
+                        className="flex-1 ml-3 text-brand-slate font-bold text-sm"
+                        placeholder="Tracking ID or Recipient..."
+                        placeholderTextColor="#94A3B8"
                         value={searchText}
                         onChangeText={setSearchText}
                     />
                     {searchText.length > 0 && (
                         <TouchableOpacity onPress={() => setSearchText('')}>
-                            <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+                            <Ionicons name="close-circle" size={20} color="#94A3B8" />
                         </TouchableOpacity>
                     )}
                 </View>
@@ -114,8 +124,10 @@ export default function AdminShipmentsScreen() {
                     renderItem={({ item }) => (
                         <TouchableOpacity
                             onPress={() => setActiveFilter(item)}
-                            className={`px-4 py-2 rounded-full mr-2 ${activeFilter === item ? 'bg-[#1e4b69]' : 'bg-gray-100'}`}>
-                            <Text className={`text-xs font-bold ${activeFilter === item ? 'text-white' : 'text-gray-500'}`}>
+                            className={`px-5 py-2.5 rounded-2xl mr-3 border ${activeFilter === item ? 'bg-brand-slate border-brand-slate' : 'bg-white border-slate-100'
+                                }`}>
+                            <Text className={`text-[10px] uppercase font-black tracking-widest ${activeFilter === item ? 'text-white' : 'text-slate-400'
+                                }`}>
                                 {item}
                             </Text>
                         </TouchableOpacity>
@@ -123,17 +135,20 @@ export default function AdminShipmentsScreen() {
                 />
             </View>
 
-            {/* List */}
+            {/* List Area */}
             <FlatList
                 data={filtered}
                 keyExtractor={item => item.id}
                 renderItem={renderItem}
-                contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+                contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 100 }}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
-                    <View className="items-center mt-20">
-                        <Ionicons name="cube-outline" size={48} color="#D1D5DB" />
-                        <Text className="text-gray-400 mt-3 font-medium">No shipments found</Text>
+                    <View className="items-center mt-20 px-12">
+                        <View className="w-20 h-20 bg-slate-50 rounded-full items-center justify-center mb-6 border border-slate-100">
+                            <Ionicons name="cube-outline" size={40} color="#CBD5E1" />
+                        </View>
+                        <Text className="text-brand-slate text-lg font-black text-center">No Shipments Found</Text>
+                        <Text className="text-slate-400 text-sm text-center mt-2 font-medium">Try adjusting your filters or search terms.</Text>
                     </View>
                 }
             />
