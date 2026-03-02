@@ -1,50 +1,75 @@
-# Welcome to your Expo app 👋
+# HobortGo 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**HobortGo** is a professional, high-performance delivery and shipment management mobile application built with Expo and React Native. It features a modern, flat brand aesthetic and robust role-based navigation for both administrators and delivery personnel.
 
-## Get started
+---
 
-1. Install dependencies
+## 🚀 Key Features
 
-   ```bash
-   npm install
-   ```
+### 📦 For Delivery Personnel
+- **My Deliveries**: A real-time queue of assigned shipments with status tracking.
+- **Scan & Go**: Integrated QR and barcode scanner for quick pickup and delivery confirmation.
+- **Proof of Delivery**: Seamlessly capture customer signatures and delivery photos.
+- **Map Integration**: One-tap navigation to delivery addresses using native maps.
+- **Notifications**: Instant alerts for new assignments and delivery updates.
 
-2. Start the app
+### 🛡️ For Administrators
+- **Shipment Overview**: Monitor all active, pending, and completed shipments.
+- **Delivery Management**: Oversee delivery personnel and their current queues.
+- **System Monitoring**: Comprehensive dashboard for logistics operations.
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## 🛠️ Technology Stack
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- **Core**: [Expo](https://expo.dev) & [React Native](https://reactnative.dev)
+- **Navigation**: [Expo Router](https://docs.expo.dev/router/introduction) (File-based routing)
+- **Styling**: [NativeWind](https://www.nativewind.dev) (Tailwind CSS for React Native)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+- **Forms & Validation**: [React Hook Form](https://react-hook-form.com) & [Zod](https://zod.dev)
+- **Data Fetching**: [TanStack Query](https://tanstack.com/query/latest)
+- **Typography**: Manrope & Poppins (via Expo Google Fonts)
+- **Icons**: Lucide & Ionicons (via Expo Symbols)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## 📂 Project Structure
 
-When you're ready, run:
+- `app/`: Expo Router application routes (Logic & UI)
+  - `(auth)/`: Authentication flow (Login, etc.)
+  - `(tabs)/`: Administrator tab navigation
+  - `(tabs-delivery)/`: Delivery personnel tab navigation
+- `components/`: Shared UI components and themed views
+- `src/`: Core business logic
+  - `data/`: Mock data and shipment repositories
+  - `store/`: Zustand state management (Auth, etc.)
+  - `hooks/`: Custom React hooks (Theming, Auth, etc.)
+- `assets/`: Images, illustrations, and local fonts
 
+---
+
+## 🏁 Getting Started
+
+### 1. Prerequisites
+Ensure you have [Node.js](https://nodejs.org/) installed.
+
+### 2. Install Dependencies
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 3. Start the Application
+```bash
+npx expo start
+```
 
-## Learn more
+Use the Expo Go app or a simulator to view the project. For a fresh start, use:
+```bash
+npx expo start --clear
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 📝 License
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This project is private and intended for use by authorized personnel.
