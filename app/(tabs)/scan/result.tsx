@@ -4,7 +4,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { captureRef } from 'react-native-view-shot';
 import { getDeliveriesByShipmentId, getDeliveryById, getDeliveryByTrackingCode, getDeliveryStatuses, scanToUpdateDelivery } from '../../../src/api/delivery';
 import SignaturePad from '../../../src/components/forms/SignaturePad';
 import { IDType, IDeliveryStatus, ReceiveType } from '../../../src/types/delivery.types';
@@ -127,24 +126,24 @@ export default function AdminScanResultScreen() {
 
     const handleSubmit = async () => {
         setErrorMsg(null);
-        if (!idNumber.trim()) {
-            setErrorMsg('ID Number is required. Please enter the recipient\'s ID number.');
-            return;
-        }
-        if (photos.length === 0) {
-            setErrorMsg('At least one photo proof is required.');
-            return;
-        }
+        // if (!idNumber.trim()) {
+        //     setErrorMsg('ID Number is required. Please enter the recipient\'s ID number.');
+        //     return;
+        // }
+        // if (photos.length === 0) {
+        //     setErrorMsg('At least one photo proof is required.');
+        //     return;
+        // }
         setSubmitting(true);
         try {
             let signatureFileUri = '';
-            if (signature && signatureRef.current) {
-                try {
-                    signatureFileUri = await captureRef(signatureRef, { format: 'png', quality: 0.9, result: 'tmpfile' });
-                } catch (e) {
-                    console.warn('Signature capture failed:', e);
-                }
-            }
+            // if (signature && signatureRef.current) {
+            //     try {
+            //         signatureFileUri = await captureRef(signatureRef, { format: 'png', quality: 0.9, result: 'tmpfile' });
+            //     } catch (e) {
+            //         console.warn('Signature capture failed:', e);
+            //     }
+            // }
 
             const payload: any = {
                 status: selectedStatus,
