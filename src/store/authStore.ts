@@ -20,10 +20,11 @@ const mmkvStorage: StateStorage = {
 
 interface AuthState {
     token: string | null;
+    refreshToken: string | null;
     user: IAdminUser | null;
     role: UserRole | null;
     hasSeenOnboarding: boolean;
-    setAuth: (token: string, user: IAdminUser) => void;
+    setAuth: (token: string, refreshToken: string, user: IAdminUser) => void;
     logout: () => void;
     setHasSeenOnboarding: (val: boolean) => void;
 }
@@ -32,11 +33,12 @@ export const useAuthStore = create<AuthState>()(
     persist(
         (set) => ({
             token: null,
+            refreshToken: null,
             user: null,
             role: null,
             hasSeenOnboarding: false,
-            setAuth: (token, user) => set({ token, user, role: user.role ?? null }),
-            logout: () => set({ token: null, user: null, role: null }),
+            setAuth: (token, refreshToken, user) => set({ token, refreshToken, user, role: user.role ?? null }),
+            logout: () => set({ token: null, refreshToken: null, user: null, role: null }),
             setHasSeenOnboarding: (val) => set({ hasSeenOnboarding: val }),
         }),
         {

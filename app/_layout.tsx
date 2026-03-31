@@ -15,7 +15,7 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import 'react-native-reanimated';
 
 import '../global.css';
@@ -34,6 +34,7 @@ export default function RootLayout() {
   const router = useRouter();
   const { token, role, hasSeenOnboarding } = useAuthStore();
   const [storeHydrated, setStoreHydrated] = useState(false);
+  const hasNavigated = useRef(false);
 
   useEffect(() => {
     let safetyTimeout: any;
@@ -85,6 +86,8 @@ export default function RootLayout() {
   // ── Initial routing after hydration (runs once) ──────────────────────────
   useEffect(() => {
     if (!loaded || !storeHydrated) return;
+    if (hasNavigated.current) return;
+    hasNavigated.current = true;
 
     const timer = setTimeout(() => {
       if (!hasSeenOnboarding) {
@@ -99,7 +102,7 @@ export default function RootLayout() {
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [loaded, storeHydrated, token, role, hasSeenOnboarding]);
+  }, [loaded, storeHydrated]);
 
   // ── Token-expiry / logout watcher ─────────────────────────────────────────
   useEffect(() => {

@@ -32,12 +32,25 @@ export default function LoginScreen() {
                 email: data.email,
                 password: data.password,
             });
+            console.log('Login response:', response);
 
-            if (response.token && response.user) {
-                setAuth(response.token, response.user);
+            if (response.accessToken?.accessToken) {
+                const { accessToken, refreshToken } = response.accessToken;
 
-                if (response.user.role === 'delivery_person' || response.user.role === 'staff') {
-                    router.replace('/(tabs-delivery)');
+                const payloadBase64 = accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+                const payload = JSON.parse(atob(payloadBase64));
+
+                const user: import('../../src/types/user.types').IAdminUser = {
+                    id: payload.sub,
+                    email: payload.email,
+                    role: payload.roles as import('../../src/types/user.types').UserRole,
+                };
+
+                setAuth(accessToken, refreshToken, user);
+                console.log('Login success, role:', user.role);
+
+                if (user.role === 'delivery_person' || user.role === 'staff') {
+                    router.replace('/(tabs-delivery)' as any);
                 } else {
                     router.replace('/(tabs)');
                 }
@@ -90,7 +103,7 @@ export default function LoginScreen() {
             <SafeAreaView className="flex-1">
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    className="flex-1 justify-center px-6"
+                    className="flex-1 justify-center px-3"
                 >
                     <View className="items-center mb-10 mt-4">
                         <Text style={{ fontFamily: 'Poppins_700Bold' }} className="text-4xl text-white">
@@ -101,7 +114,7 @@ export default function LoginScreen() {
                         </Text>
                     </View>
 
-                    <View className="bg-white rounded-lg p-7 border border-gray-100">
+                    <View className="bg-white rounded-lg py-7 px-5 border border-gray-100">
                         <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-2xl text-gray-900 mb-1">
                             Welcome back
                         </Text>

@@ -153,7 +153,7 @@ export default function AdminDashboardScreen() {
 
                 {/* Recent Activity Section */}
                 <View className="flex-row justify-between items-center mb-4">
-                    <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-lg">Recent Scans</Text>
+                    <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-lg">Recent Deliveries</Text>
                     <TouchableOpacity>
                         <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-brand-orange text-sm">See all</Text>
                     </TouchableOpacity>

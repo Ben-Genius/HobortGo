@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Dimensions, Image, Text, TouchableOpacity, View } from 'react-native';
 import Carousel from 'react-native-snap-carousel';
+import { useAuthStore } from '../../src/store/authStore';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -27,10 +28,16 @@ export default function OnboardingScreen() {
     const [activeIndex, setActiveIndex] = useState(0);
     const carouselRef = useRef<any>(null);
     const router = useRouter();
+    const setHasSeenOnboarding = useAuthStore((state) => state.setHasSeenOnboarding);
+
+    const finishOnboarding = () => {
+        setHasSeenOnboarding(true);
+        router.replace('/(auth)/login');
+    };
 
     const handleNext = () => {
         if (activeIndex === ONBOARDING_DATA.length - 1) {
-            router.replace('/(auth)/login');
+            finishOnboarding();
         } else {
             carouselRef.current?.snapToNext();
         }
@@ -57,7 +64,7 @@ export default function OnboardingScreen() {
                 <Text className="text-xl font-extrabold tracking-tight text-[#1e4b69]">
                     Hobort<Text className="text-[#f0782d]">Go</Text>
                 </Text>
-                <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
+                <TouchableOpacity onPress={finishOnboarding}>
                     <Text className="text-gray-400 font-bold text-sm tracking-widest uppercase">Skip</Text>
                 </TouchableOpacity>
             </View>

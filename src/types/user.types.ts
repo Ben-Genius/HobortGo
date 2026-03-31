@@ -8,6 +8,10 @@ export interface IAdminUser {
 }
 
 export interface ILoginResponse {
-    token: string;
-    user: IAdminUser;
+    verified: boolean;
+    active: boolean;
+    accessToken: {
+        accessToken: string;
+        refreshToken: string;
+    };
 }
