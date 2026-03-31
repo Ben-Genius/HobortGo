@@ -11,6 +11,8 @@ import { IDType, IDeliveryStatus, ReceiveType } from '../../../../src/types/deli
 
 const ID_TYPES: IDType[] = ['Passport', 'National ID', "Driver's License", 'Voter ID', 'SSNIT'];
 
+const ACTIONABLE_STATUSES = ['Pending', 'Scheduled', 'In-transit', 'In Transit', 'Out for Delivery'];
+
 const LockedField = ({ label, value }: { label: string; value: string }) => (
     <View>
         <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-400 uppercase tracking-wider mb-1.5">{label}</Text>
@@ -54,6 +56,23 @@ export default function AdminDeliveryUpdateScreen() {
 
     useEffect(() => {
         const fetchInitialData = async () => {
+            setLoading(true);
+            setDelivery(null);
+            setFetchError(null);
+            setErrorMsg(null);
+            // Reset form fields
+            setSelectedStatus('');
+            setReceivedBy('');
+            setIdNumber('');
+            setPhoneNumber('');
+            setEmail('');
+            setAddress('');
+            setDigitalAddress('');
+            setLandmark('');
+            setLocation('');
+            setPhotos([]);
+            setSignature('');
+
             try {
                 const [statusRes, deliveryRes] = await Promise.all([
                     getDeliveryStatuses(),

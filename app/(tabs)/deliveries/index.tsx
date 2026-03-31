@@ -8,14 +8,19 @@ import { getDeliveries } from '../../../src/api/delivery';
 const DELIVERY_FILTERS = ['All', 'Pending', 'Scheduled', 'In-transit', 'Delivered', 'Failed'] as const;
 type DeliveryFilter = typeof DELIVERY_FILTERS[number];
 
-const ACTIONABLE_STATUSES = ['Pending', 'Scheduled', 'In-transit'];
+const ACTIONABLE_STATUSES = ['Pending', 'Scheduled', 'In-transit', 'In Transit', 'Out for Delivery'];
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string }> = {
-    Pending: { bg: '#fef3c7', text: '#92400e', dot: '#d97706' },
-    Scheduled: { bg: '#e6f0f5', text: '#1e4b69', dot: '#1e4b69' },
-    'In-transit': { bg: '#fff0e6', text: '#f0782d', dot: '#f0782d' },
-    Delivered: { bg: '#f0fdf4', text: '#16a34a', dot: '#16a34a' },
-    Failed: { bg: '#fef2f2', text: '#dc2626', dot: '#dc2626' },
+const STATUS_CONFIG: Record<string, { bg: string; text: string; icon: any }> = {
+    'Pending': { bg: '#fff0e6', text: '#f0782d', icon: 'time-outline' },
+    'In-transit': { bg: '#f3f0ff', text: '#7c3aed', icon: 'bicycle-outline' },
+    'In Transit': { bg: '#f3f0ff', text: '#7c3aed', icon: 'bicycle-outline' },
+    'Out for Delivery': { bg: '#f3f0ff', text: '#7c3aed', icon: 'bicycle-outline' },
+    'Scheduled': { bg: '#fef9c3', text: '#a16207', icon: 'calendar-outline' },
+    'Delivered': { bg: '#dcfce7', text: '#16a34a', icon: 'checkmark-circle-outline' },
+    'Confiscated': { bg: '#fee2e2', text: '#dc2626', icon: 'alert-circle-outline' },
+    'Received': { bg: '#e0f2fe', text: '#0369a1', icon: 'archive-outline' },
+    'ReceivedGH': { bg: '#e0f2fe', text: '#0369a1', icon: 'archive-outline' },
+    'Failed': { bg: '#fef2f2', text: '#dc2626', icon: 'close-circle-outline' },
 };
 
 /** Resolve the display name of the recipient from the real API shape */
@@ -25,6 +30,16 @@ function getRecipientName(item: any): string | null {
     const first = rb.firstname?.trim() ?? '';
     const last = rb.lastname?.trim() ?? '';
     return [first, last].filter(Boolean).join(' ') || rb.email || null;
+}
+
+/** Resolve the courier name from either an object or a plain string */
+function getCourierName(item: any): string | null {
+    const db = item.deliveredBy;
+    if (!db) return null;
+    if (typeof db === 'string') return db;
+    const first = db.firstname?.trim() ?? '';
+    const last = db.lastname?.trim() ?? '';
+    return [first, last].filter(Boolean).join(' ') || db.email || null;
 }
 
 export default function AdminDeliveriesScreen() {
@@ -56,8 +71,8 @@ export default function AdminDeliveriesScreen() {
         fetchData();
     };
 
-    // Real status lives on item.statusId.status
-    const getStatus = (d: any): string => d.statusId?.status ?? 'Pending';
+        // Real status lives on item.statusId.status, fallback to shipment status
+    const getStatus = (d: any): string => d.statusId?.status ?? d.shipmentId?.status?.status ?? 'Pending';
 
     const filtered = activeFilter === 'All'
         ? deliveries
@@ -75,8 +90,8 @@ export default function AdminDeliveriesScreen() {
         const statusLabel = getStatus(item);
         const cfg = STATUS_CONFIG[statusLabel] ?? STATUS_CONFIG.Pending;
 
-        // deliveredBy is a plain string (courier name)
-        const courierName: string | null = item.deliveredBy ?? null;
+        // courier resolved from deliveredBy object or string
+        const courierName = getCourierName(item);
         // recipient resolved from receivedBy object
         const recipientName = getRecipientName(item);
 
@@ -98,7 +113,7 @@ export default function AdminDeliveriesScreen() {
                         ) : null}
                     </View>
                     <View style={{ backgroundColor: cfg.bg }} className="px-3 py-1 rounded-full flex-row items-center gap-1.5">
-                        <View style={{ backgroundColor: cfg.dot }} className="w-1.5 h-1.5 rounded-full" />
+                        <Ionicons name={cfg.icon} size={11} color={cfg.text} />
                         <Text style={{ color: cfg.text, fontFamily: 'Manrope_600SemiBold', fontSize: 10 }}>
                             {statusLabel}
                         </Text>
@@ -135,7 +150,7 @@ export default function AdminDeliveriesScreen() {
                     <View className="flex-row items-center gap-2 mb-3">
                         <View className="w-6 h-6 bg-brand-secondary rounded-full items-center justify-center">
                             <Text style={{ fontFamily: 'Manrope_700Bold', fontSize: 9 }} className="text-white">
-                                {courierName.charAt(0)}
+                                {courierName?.charAt?.(0) || '?'}
                             </Text>
                         </View>
                         <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11 }} className="text-brand-secondary">
