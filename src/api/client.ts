@@ -1,7 +1,13 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
-const BASE_URL = 'http://localhost:3000/api/v1'; // Replace with actual API URL
+const rawBaseUrl = (process.env.EXPO_PUBLIC_BASE_URL || 'http://192.168.100.208:3000/api').replace(/\/$/, '');
+// Ensure the full versioned path: strip any trailing /v1 then append clean /v1
+const BASE_URL = rawBaseUrl.endsWith('/api/v1')
+    ? rawBaseUrl
+    : rawBaseUrl.endsWith('/api')
+    ? `${rawBaseUrl}/v1`
+    : `${rawBaseUrl}/api/v1`;
 
 export const apiClient = axios.create({
     baseURL: BASE_URL,

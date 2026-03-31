@@ -12,10 +12,10 @@ import {
 } from '@expo-google-fonts/poppins';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
 import '../global.css';
@@ -26,13 +26,45 @@ import { useAuthStore } from '../src/store/authStore';
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  initialRouteName: '(tabs)',
 };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const { token, role } = useAuthStore();
+  const router = useRouter();
+  const { token, role, hasSeenOnboarding } = useAuthStore();
+  const [storeHydrated, setStoreHydrated] = useState(false);
 
+  useEffect(() => {
+    let safetyTimeout: any;
+
+    try {
+        console.log('[DEBUG] mmkv hydration check...');
+        if (useAuthStore.persist.hasHydrated()) {
+          console.log('[DEBUG] mmkv already hydrated.');
+          setStoreHydrated(true);
+        }
+
+        const unsub = useAuthStore.persist.onFinishHydration(() => {
+            console.log('[DEBUG] mmkv hydration finished via listener.');
+            setStoreHydrated(true);
+        });
+
+        // 5s Safety fallback
+        safetyTimeout = setTimeout(() => {
+            console.log('[DEBUG] mmkv hydration safety fallback triggered.');
+            setStoreHydrated(true);
+        }, 5000);
+
+        return () => {
+            unsub();
+            clearTimeout(safetyTimeout);
+        };
+    } catch (e) {
+        console.error('Initialisation error:', e);
+        setStoreHydrated(true); // Fail open
+    }
+  }, []);
   const [loaded] = useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
@@ -45,25 +77,52 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && storeHydrated) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, storeHydrated]);
 
-  if (!loaded) {
+  // ── Initial routing after hydration (runs once) ──────────────────────────
+  useEffect(() => {
+    if (!loaded || !storeHydrated) return;
+
+    const timer = setTimeout(() => {
+      if (!hasSeenOnboarding) {
+        router.replace('/(onboarding)');
+      } else if (!token) {
+        router.replace('/(auth)/login');
+      } else if (role === 'delivery_person' || role === 'staff') {
+        router.replace('/(tabs-delivery)' as any);
+      } else {
+        router.replace('/(tabs)');
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [loaded, storeHydrated, token, role, hasSeenOnboarding]);
+
+  // ── Token-expiry / logout watcher ─────────────────────────────────────────
+  useEffect(() => {
+    if (!loaded || !storeHydrated) return;
+    if (!token) {
+      router.replace('/(auth)/login');
+    }
+  }, [token, loaded, storeHydrated]);
+
+  if (!loaded || !storeHydrated) {
     return null;
   }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs-delivery)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="(tabs-delivery)" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style='auto' animated />
     </ThemeProvider>
   );
 }

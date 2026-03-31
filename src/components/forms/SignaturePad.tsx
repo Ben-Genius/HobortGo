@@ -1,16 +1,18 @@
-import React, { useRef, useState } from 'react';
+import React, { forwardRef, useRef, useState } from 'react';
 import { PanResponder, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 interface SignaturePadProps {
-    /** Called with an SVG path string when signature is captured */
     onSave: (pathData: string) => void;
     height?: number;
 }
 
-export default function SignaturePad({ onSave, height = 160 }: SignaturePadProps) {
+const SignaturePad = forwardRef<View, SignaturePadProps>(function SignaturePad({ onSave, height = 160 }, ref) {
     const [paths, setPaths] = useState<string[]>([]);
     const [currentPath, setCurrentPath] = useState('');
+    // Track paths in a ref so PanResponder callbacks avoid stale closures
+    // and onSave is never called inside a setPaths callback (fixes setState-in-render warning)
+    const pathsRef = useRef<string[]>([]);
     const isDrawing = useRef(false);
 
     const buildPath = (x: number, y: number, move: boolean) => {
@@ -37,11 +39,9 @@ export default function SignaturePad({ onSave, height = 160 }: SignaturePadProps
         onPanResponderRelease: () => {
             isDrawing.current = false;
             if (currentPath) {
-                setPaths(prev => {
-                    const updated = [...prev, currentPath];
-                    onSave(updated.join(' '));
-                    return updated;
-                });
+                pathsRef.current = [...pathsRef.current, currentPath];
+                setPaths([...pathsRef.current]);
+                onSave(pathsRef.current.join(' '));
                 setCurrentPath('');
             }
         },
@@ -53,6 +53,7 @@ export default function SignaturePad({ onSave, height = 160 }: SignaturePadProps
     });
 
     const clear = () => {
+        pathsRef.current = [];
         setPaths([]);
         setCurrentPath('');
         onSave('');
@@ -63,11 +64,11 @@ export default function SignaturePad({ onSave, height = 160 }: SignaturePadProps
     return (
         <View>
             <View
+                ref={ref}
                 style={{ height, borderRadius: 10, overflow: 'hidden' }}
                 className="bg-slate-50 border border-slate-200"
                 {...panResponder.panHandlers}>
                 <Svg width="100%" height={height}>
-                    {/* Existing strokes */}
                     {paths.map((d, i) => (
                         <Path
                             key={i}
@@ -79,7 +80,6 @@ export default function SignaturePad({ onSave, height = 160 }: SignaturePadProps
                             fill="none"
                         />
                     ))}
-                    {/* Current in-progress stroke */}
                     {currentPath ? (
                         <Path
                             d={currentPath}
@@ -101,7 +101,6 @@ export default function SignaturePad({ onSave, height = 160 }: SignaturePadProps
                 )}
             </View>
 
-            {/* Controls */}
             <View className="flex-row justify-between items-center mt-2">
                 <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 11 }} className="text-slate-400">
                     {isEmpty ? 'Draw your signature above' : 'Signed ✓'}
@@ -116,4 +115,6 @@ export default function SignaturePad({ onSave, height = 160 }: SignaturePadProps
             </View>
         </View>
     );
-}
+});
+
+export default SignaturePad;

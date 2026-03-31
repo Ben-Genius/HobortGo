@@ -5,9 +5,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
-import { getDeliveryById, getDeliveryStatuses, scanToUpdateDelivery } from '../../../../src/api/delivery';
-import SignaturePad from '../../../../src/components/forms/SignaturePad';
-import { IDType, IDeliveryStatus, ReceiveType } from '../../../../src/types/delivery.types';
+import { getDeliveriesByShipmentId, getDeliveryById, getDeliveryByTrackingCode, getDeliveryStatuses, scanToUpdateDelivery } from '@/src/api/delivery';
+import SignaturePad from '@/src/components/forms/SignaturePad';
+import { IDType, IDeliveryStatus, ReceiveType } from '@/src/types/delivery.types';
 
 const ID_TYPES: IDType[] = ['Passport', 'National ID', "Driver's License", 'Voter ID', 'SSNIT'];
 
@@ -21,9 +21,8 @@ const LockedField = ({ label, value }: { label: string; value: string }) => (
     </View>
 );
 
-export default function AdminDeliveryUpdateScreen() {
-    // `id` comes from the URL segment deliveries/[id]/update
-    const { id } = useLocalSearchParams<{ id: string }>();
+export default function ScanResultScreen() {
+    const { trackingId, deliveryId } = useLocalSearchParams<{ trackingId: string; flow: string; deliveryId: string }>();
     const router = useRouter();
 
     const [delivery, setDelivery] = useState<any>(null);
@@ -32,6 +31,7 @@ export default function AdminDeliveryUpdateScreen() {
     const [statuses, setStatuses] = useState<IDeliveryStatus[]>([]);
     const [scrollEnabled, setScrollEnabled] = useState(true);
 
+    // Locked pre-filled fields (from response)
     const [receivedBy, setReceivedBy] = useState('');
     const [receiveType, setReceiveType] = useState<ReceiveType>('Self');
     const [idType, setIdType] = useState<IDType>('National ID');
@@ -45,6 +45,7 @@ export default function AdminDeliveryUpdateScreen() {
 
     const signatureRef = useRef<View>(null);
 
+    // Editable fields
     const [selectedStatus, setSelectedStatus] = useState<string>('');
     const [notes, setNotes] = useState('');
     const [photos, setPhotos] = useState<string[]>([]);
@@ -55,17 +56,35 @@ export default function AdminDeliveryUpdateScreen() {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                const [statusRes, deliveryRes] = await Promise.all([
-                    getDeliveryStatuses(),
-                    getDeliveryById(id as string),
-                ]);
-
+                const statusRes = await getDeliveryStatuses();
                 setStatuses(statusRes?.data || []);
 
-                const dData = deliveryRes?.data ?? deliveryRes;
-                if (dData) {
+                let deliveryRes;
+                if (deliveryId) {
+                    deliveryRes = await getDeliveryById(deliveryId);
+                } else if (trackingId) {
+                    try {
+                        deliveryRes = await getDeliveryByTrackingCode(trackingId);
+                    } catch (err: any) {
+                        if (err?.response?.status === 404) {
+                            // Fallback: treat scanned code as a shipment ID
+                            const fallback = await getDeliveriesByShipmentId(trackingId);
+                            const list = fallback?.data ?? fallback;
+                            deliveryRes = Array.isArray(list) ? list[0] : fallback;
+                        } else {
+                            throw err;
+                        }
+                    }
+                }
+
+                if (deliveryRes) {
+                    const dData = deliveryRes.data || deliveryRes;
                     setDelivery(dData);
-                    if (dData.statusId?.status) setSelectedStatus(dData.statusId.status);
+
+                    if (dData.statusId?.status) {
+                        setSelectedStatus(dData.statusId.status);
+                    }
+
                     const rb = dData.receivedBy;
                     const fullName = rb ? `${rb.firstname || ''} ${rb.lastname || ''}`.trim() : '';
                     setReceivedBy(fullName);
@@ -74,6 +93,7 @@ export default function AdminDeliveryUpdateScreen() {
                     setReceiveType(dData.receiveType || 'Self');
                     if (dData.idType) setIdType(dData.idType as IDType);
                     setIdNumber(dData.idNumber || '');
+
                     setAddress(dData.address || '');
                     setDigitalAddress(dData.digitalAddress || '');
                     setLandmark(dData.landmark || '');
@@ -82,13 +102,14 @@ export default function AdminDeliveryUpdateScreen() {
             } catch (error: any) {
                 const raw = error?.response?.data;
                 const msg = raw?.message || (typeof raw === 'string' ? raw : null) || error?.message || 'Could not retrieve delivery details.';
+                console.error('Error fetching scan data:', raw);
                 setFetchError(msg);
             } finally {
                 setLoading(false);
             }
         };
-        if (id) fetchInitialData();
-    }, [id]);
+        fetchInitialData();
+    }, [trackingId, deliveryId]);
 
     const takePhoto = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -97,22 +118,35 @@ export default function AdminDeliveryUpdateScreen() {
             return;
         }
         try {
-            const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.7, allowsEditing: false });
-            if (!result.canceled && result.assets[0]) setPhotos(prev => [...prev, result.assets[0].uri]);
+            const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: 'images',
+                quality: 0.7,
+                allowsEditing: false,
+            });
+            if (!result.canceled && result.assets[0]) {
+                setPhotos(prev => [...prev, result.assets[0].uri]);
+            }
         } catch {
             Alert.alert('Camera unavailable', 'Cannot access camera. Please use the gallery instead.');
         }
     };
 
     const pickImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.5, allowsEditing: false });
-        if (!result.canceled && result.assets[0]) setPhotos(prev => [...prev, result.assets[0].uri]);
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: 'images',
+            quality: 0.5,
+            allowsEditing: false,
+        });
+        if (!result.canceled && result.assets[0]) {
+            setPhotos(prev => [...prev, result.assets[0].uri]);
+        }
     };
 
     const removePhoto = (idx: number) => setPhotos(prev => prev.filter((_, i) => i !== idx));
 
     const handleSubmit = async () => {
         setErrorMsg(null);
+
         if (!idNumber.trim()) {
             setErrorMsg("ID Number is required. Please enter the recipient's ID number.");
             return;
@@ -121,12 +155,17 @@ export default function AdminDeliveryUpdateScreen() {
             setErrorMsg('At least one photo proof is required.');
             return;
         }
+
         setSubmitting(true);
         try {
             let signatureFileUri = '';
             if (signature && signatureRef.current) {
                 try {
-                    signatureFileUri = await captureRef(signatureRef, { format: 'png', quality: 0.9, result: 'tmpfile' });
+                    signatureFileUri = await captureRef(signatureRef, {
+                        format: 'png',
+                        quality: 0.9,
+                        result: 'tmpfile',
+                    });
                 } catch (e) {
                     console.warn('Signature capture failed:', e);
                 }
@@ -145,35 +184,44 @@ export default function AdminDeliveryUpdateScreen() {
                 landmark,
                 location,
                 notes,
-                ...(signatureFileUri ? { signature: { uri: signatureFileUri, type: 'image/png', name: 'signature.png' } } : {}),
+                ...(signatureFileUri ? {
+                    signature: { uri: signatureFileUri, type: 'image/png', name: 'signature.png' },
+                } : {}),
                 photo: photos.map((p, i) => ({ uri: p, type: 'image/jpeg', name: `photo_${i}.jpg` })),
             };
 
-            const trackingCode = delivery?.shipmentId?.trackingId || delivery?.shipmentId?.code;
-            await scanToUpdateDelivery(trackingCode, payload);
+            await scanToUpdateDelivery(delivery.shipmentId?.trackingId || trackingId, payload);
 
             Alert.alert('Success!', 'Delivery updated successfully.', [
-                { text: 'Done', onPress: () => router.back() },
+                { text: 'Done', onPress: () => router.replace('/(tabs-delivery)') },
             ]);
         } catch (error: any) {
             const raw = error?.response?.data?.message;
             const serverMsg = Array.isArray(raw)
                 ? raw.join(' · ')
-                : raw || (typeof error?.response?.data === 'string' ? error.response.data : null) || error?.message || 'Failed to update delivery.';
+                : raw
+                || (typeof error?.response?.data === 'string' ? error.response.data : null)
+                || error?.message
+                || 'Failed to update delivery.';
+            console.error('Submit error response:', JSON.stringify(error?.response?.data));
             setErrorMsg(serverMsg);
         } finally {
             setSubmitting(false);
         }
     };
 
+    // ── Loading ──────────────────────────────────────────────────────────────────
+
     if (loading) {
         return (
             <SafeAreaView className="flex-1 bg-white items-center justify-center">
                 <ActivityIndicator size="large" color="#F0782D" />
-                <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-400 mt-3 text-sm">Fetching Details...</Text>
+                <Text className="mt-4 text-slate-400">Fetching Details...</Text>
             </SafeAreaView>
         );
     }
+
+    // ── Not found / fetch error ──────────────────────────────────────────────────
 
     if (!delivery) {
         return (
@@ -186,15 +234,22 @@ export default function AdminDeliveryUpdateScreen() {
                 </Text>
                 {fetchError ? (
                     <View className="bg-red-50 border border-red-100 rounded-lg px-4 py-3 mb-6 w-full">
-                        <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 13, color: '#dc2626', textAlign: 'center' }}>{fetchError}</Text>
+                        <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 13, color: '#dc2626', textAlign: 'center' }}>
+                            {fetchError}
+                        </Text>
                     </View>
                 ) : (
                     <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-sm text-center mb-6">
-                        Could not load delivery details.
+                        No delivery matched "{trackingId || 'unknown'}".
                     </Text>
                 )}
-                <TouchableOpacity className="bg-brand-secondary rounded-lg py-4 w-full items-center" onPress={() => router.back()}>
-                    <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white">Go Back</Text>
+                <TouchableOpacity
+                    className="bg-brand-secondary rounded-lg py-4 w-full items-center mb-3"
+                    onPress={() => router.back()}>
+                    <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white">Scan Again</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => router.replace('/(tabs-delivery)')}>
+                    <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 13, color: '#94A3B8' }}>Go to Home</Text>
                 </TouchableOpacity>
             </SafeAreaView>
         );
@@ -204,7 +259,6 @@ export default function AdminDeliveryUpdateScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-white">
-            {/* Header */}
             <View className="flex-row items-center justify-between px-5 pt-2 mb-5">
                 <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 bg-slate-50 rounded-lg items-center justify-center border border-slate-100">
                     <Ionicons name="arrow-back-outline" size={20} color="#1e4b69" />
@@ -213,7 +267,7 @@ export default function AdminDeliveryUpdateScreen() {
                 <View className="w-10" />
             </View>
 
-            <ScrollView scrollEnabled={scrollEnabled} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+            <ScrollView scrollEnabled={scrollEnabled} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
                 <View className="px-5 pb-4">
 
                     {/* Shipment Banner */}
@@ -241,10 +295,14 @@ export default function AdminDeliveryUpdateScreen() {
                                 style={{
                                     backgroundColor: selectedStatus === opt.status ? '#1e4b69' : '#f1f5f9',
                                     borderWidth: 1,
-                                    borderColor: selectedStatus === opt.status ? '#1e4b69' : '#e2e8f0',
+                                    borderColor: selectedStatus === opt.status ? '#1e4b69' : '#e2e8f0'
                                 }}
                                 className="rounded-full px-4 py-2">
-                                <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 12, color: selectedStatus === opt.status ? 'white' : '#64748b' }}>
+                                <Text style={{
+                                    fontFamily: 'Manrope_600SemiBold',
+                                    fontSize: 12,
+                                    color: selectedStatus === opt.status ? 'white' : '#64748b'
+                                }}>
                                     {opt.status}
                                 </Text>
                             </TouchableOpacity>
@@ -271,16 +329,24 @@ export default function AdminDeliveryUpdateScreen() {
                         </View>
 
                         <LockedField label="Full Name" value={receivedBy} />
+
                         <View className="flex-row gap-4">
-                            <View className="flex-1"><LockedField label="Phone Number" value={phoneNumber} /></View>
-                            <View className="flex-1"><LockedField label="Email" value={email} /></View>
+                            <View className="flex-1">
+                                <LockedField label="Phone Number" value={phoneNumber} />
+                            </View>
+                            <View className="flex-1">
+                                <LockedField label="Email" value={email} />
+                            </View>
                         </View>
 
                         <View>
                             <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-400 uppercase tracking-wider mb-1.5">ID Type</Text>
                             <View className="flex-row gap-2 flex-wrap">
                                 {ID_TYPES.map(type => (
-                                    <View key={type} className={`px-3 py-2 rounded-lg border ${idType === type ? 'bg-brand-secondary/10 border-brand-secondary' : 'bg-slate-50 border-slate-100 opacity-40'}`}>
+                                    <View
+                                        key={type}
+                                        className={`px-3 py-2 rounded-lg border ${idType === type ? 'bg-brand-secondary/10 border-brand-secondary' : 'bg-slate-50 border-slate-100 opacity-40'}`}
+                                    >
                                         <Text style={{ fontSize: 10, color: idType === type ? '#1e4b69' : '#64748b' }}>{type}</Text>
                                     </View>
                                 ))}
@@ -316,8 +382,12 @@ export default function AdminDeliveryUpdateScreen() {
                         </View>
                         <LockedField label="Delivery Address" value={address} />
                         <View className="flex-row gap-4">
-                            <View className="flex-1"><LockedField label="Digital Address" value={digitalAddress} /></View>
-                            <View className="flex-1"><LockedField label="Landmark" value={landmark} /></View>
+                            <View className="flex-1">
+                                <LockedField label="Digital Address" value={digitalAddress} />
+                            </View>
+                            <View className="flex-1">
+                                <LockedField label="Landmark" value={landmark} />
+                            </View>
                         </View>
                     </View>
 
@@ -329,7 +399,8 @@ export default function AdminDeliveryUpdateScreen() {
                         <View
                             onTouchStart={() => setScrollEnabled(false)}
                             onTouchEnd={() => setScrollEnabled(true)}
-                            onTouchCancel={() => setScrollEnabled(true)}>
+                            onTouchCancel={() => setScrollEnabled(true)}
+                        >
                             <SignaturePad ref={signatureRef} height={160} onSave={setSignature} />
                         </View>
 
@@ -340,7 +411,8 @@ export default function AdminDeliveryUpdateScreen() {
                                     <Image source={{ uri }} style={{ width: 80, height: 80, borderRadius: 8 }} />
                                     <TouchableOpacity
                                         onPress={() => removePhoto(idx)}
-                                        className="absolute -top-2 -right-2 bg-red-500 rounded-full w-5 h-5 items-center justify-center">
+                                        className="absolute -top-2 -right-2 bg-red-500 rounded-full w-5 h-5 items-center justify-center"
+                                    >
                                         <Ionicons name="close" size={12} color="white" />
                                     </TouchableOpacity>
                                 </View>
@@ -373,12 +445,14 @@ export default function AdminDeliveryUpdateScreen() {
                 </View>
             </ScrollView>
 
-            {/* Sticky submit bar */}
+            {/* Sticky footer with inline error banner */}
             <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-5 pt-3 pb-4">
                 {errorMsg ? (
                     <View className="flex-row items-start gap-2 bg-red-50 border border-red-100 rounded-lg px-4 py-3 mb-3">
                         <Ionicons name="alert-circle-outline" size={16} color="#dc2626" style={{ marginTop: 1 }} />
-                        <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 13, color: '#dc2626', flex: 1, lineHeight: 18 }}>{errorMsg}</Text>
+                        <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 13, color: '#dc2626', flex: 1, lineHeight: 18 }}>
+                            {errorMsg}
+                        </Text>
                         <TouchableOpacity onPress={() => setErrorMsg(null)} hitSlop={8}>
                             <Ionicons name="close" size={16} color="#dc2626" />
                         </TouchableOpacity>

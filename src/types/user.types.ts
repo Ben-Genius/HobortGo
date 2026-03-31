@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'delivery_person';
+export type UserRole = 'admin' | 'super_admin' | 'delivery_person' | 'staff';
 
 export interface IAdminUser {
     id: string;

@@ -2,6 +2,12 @@ export type ReceiveType = 'Self' | 'VerifiedPerson' | 'Other';
 export type DeliveryType = 'Delivery' | 'Pickup';
 export type IDType = 'Passport' | 'National ID' | "Driver's License" | 'Voter ID' | 'SSNIT';
 
+export interface IDeliveryStatus {
+    _id: string;
+    status: string;
+    description: string;
+}
+
 export interface IDeliveryPayload {
     shipmentId: string;
     type: DeliveryType;
@@ -18,10 +24,11 @@ export interface IDeliveryPayload {
 }
 
 export interface IScanToUpdatePayload {
+    status?: string;
     receiveType: ReceiveType;
     receivedBy?: string;
-    signature: any; // Blob, File, or { uri, type, name } for React Native
-    photo: any;
+    signature?: any; // { uri, type, name } for React Native
+    photo: any[];
     idType?: IDType;
     idNumber: string;
     phoneNumber: string;

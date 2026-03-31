@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import RoleGuard from '@/src/components/navigation/RoleGuard';
 
 const TAB_BAR_STYLE = {
   backgroundColor: '#FFFFFF',
@@ -16,6 +17,7 @@ const TAB_BAR_STYLE = {
 
 export default function AdminTabLayout() {
   return (
+    <RoleGuard allowedRoles={['admin', 'super_admin']}>
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: '#f0782d',
@@ -35,7 +37,7 @@ export default function AdminTabLayout() {
       />
       {/* Tab 2 — Scan / Receipt */}
       <Tabs.Screen
-        name="scan/index"
+        name="scan"
         options={{
           title: 'Scan',
           tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'qr-code' : 'qr-code-outline'} color={color} />,
@@ -57,21 +59,23 @@ export default function AdminTabLayout() {
           tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'bicycle' : 'bicycle-outline'} color={color} />,
         }}
       />
-      {/* Tab 5 — Notifications */}
+      {/* Tab 5 — Settings */}
       <Tabs.Screen
-        name="notifications/index"
+        name="settings/index"
         options={{
-          title: 'Alerts',
-          tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'notifications' : 'notifications-outline'} color={color} />,
+          title: 'Settings',
+          tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'settings' : 'settings-outline'} color={color} />,
         }}
       />
 
       {/* ── Hidden screens ── */}
       <Tabs.Screen name="scanner" options={{ href: null }} />
+      <Tabs.Screen name="notifications/index" options={{ href: null }} />
       <Tabs.Screen name="deliveries/[id]" options={{ href: null }} />
       <Tabs.Screen name="deliveries/[id]/update" options={{ href: null }} />
       <Tabs.Screen name="shipments/[id]" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
+    </RoleGuard>
   );
 }

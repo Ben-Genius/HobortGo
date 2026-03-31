@@ -4,29 +4,76 @@ import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useAuthStore } from '../../src/store/authStore';
 
-// ── Dummy Data ────────────────────────────────────────────────────────────────
-const SUMMARY_CARDS = [
-    { label: 'Received Today', value: 24, icon: 'archive', color: '#1e4b69', bg: '#e6f0f5' },
-    { label: 'Pending', value: 8, icon: 'time', color: '#f0782d', bg: '#fff0e6' },
-    { label: 'Out for Delivery', value: 5, icon: 'bicycle', color: '#7c3aed', bg: '#f3f0ff' },
-    { label: 'Delivered', value: 11, icon: 'checkmark-circle', color: '#16a34a', bg: '#f0fdf4' },
+import { ActivityIndicator } from 'react-native';
+import { getDeliveries } from '../../src/api/delivery';
+import { getShipments } from '../../src/api/shipment';
+import { IShipment } from '../../src/types/shipment.types';
+
+const INITIAL_SUMMARY = [
+    { label: 'Received Today', value: 0, icon: 'archive', color: '#1e4b69', bg: '#e6f0f5', statusKey: 'Received' },
+    { label: 'Pending', value: 0, icon: 'time', color: '#f0782d', bg: '#fff0e6', statusKey: 'Pending' },
+    { label: 'Out for Delivery', value: 0, icon: 'bicycle', color: '#7c3aed', bg: '#f3f0ff', statusKey: 'Out for Delivery' },
+    { label: 'Delivered', value: 0, icon: 'checkmark-circle', color: '#16a34a', bg: '#f0fdf4', statusKey: 'Delivered' },
 ] as const;
-
-const RECENT_SCANS = [
-    { id: 'HB-10041', time: '2:15 PM', admin: 'K. Asante', status: 'Received' },
-    { id: 'HB-10039', time: '1:47 PM', admin: 'K. Asante', status: 'Received' },
-    { id: 'HB-10035', time: '11:22 AM', admin: 'A. Mensah', status: 'Received' },
-    { id: 'HB-10031', time: '9:05 AM', admin: 'K. Asante', status: 'Received' },
-];
-
-const FLAGGED = [
-    { id: 'HB-10029', reason: 'Damaged on arrival' },
-    { id: 'HB-10018', reason: 'Customs hold' },
-];
 
 export default function AdminDashboardScreen() {
     const router = useRouter();
     const user = useAuthStore(state => state.user);
+    const token = useAuthStore(state => state.token);
+    const [loading, setLoading] = React.useState(true);
+    const [summary, setSummary] = React.useState(INITIAL_SUMMARY);
+    const [recentScans, setRecentScans] = React.useState<any[]>([]);
+    const [activeDeliveriesCount, setActiveDeliveriesCount] = React.useState(0);
+
+    React.useEffect(() => {
+        if (!token) return;
+
+        const fetchDashboardData = async () => {
+            console.log('[DEBUG] EXPO_PUBLIC_BASE_URL:', process.env.EXPO_PUBLIC_BASE_URL);
+            try {
+                // Fetch recent shipments (first 20)
+                const shipmentData = await getShipments({ offset: 0, limit: 100 });
+                const shipments: IShipment[] = shipmentData.data;
+
+                // Update summary counts based on real shipment status
+                const newSummary = INITIAL_SUMMARY.map(item => ({
+                    ...item,
+                    value: shipments.filter(s => s.status?.status === item.statusKey).length
+                }));
+                setSummary(newSummary as any);
+
+                // Update recent scans (last 5)
+                const formattedScans = shipments.slice(0, 5).map(s => ({
+                    key: s._id,
+                    id: s.trackingId,
+                    time: new Date(s.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    admin: s.sender || 'System',
+                    status: s.status?.status || 'Unknown'
+                }));
+                setRecentScans(formattedScans);
+
+                // Fetch deliveries for the active banner
+                const deliveryData = await getDeliveries({ offset: 0, limit: 1 });
+                setActiveDeliveriesCount(deliveryData.total || 0);
+
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, [token]);
+
+    if (loading) {
+        return (
+            <View className="flex-1 items-center justify-center bg-white">
+                <ActivityIndicator size="large" color="#F0782D" />
+                <Text className="mt-4 text-slate-400 font-medium">Loading Dashboard...</Text>
+            </View>
+        );
+    }
 
     return (
         <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
@@ -63,7 +110,7 @@ export default function AdminDashboardScreen() {
                 <View className="bg-brand-orange rounded-lg p-6 mb-8 overflow-hidden">
                     <View className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full" />
                     <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-white/80 text-xs uppercase tracking-widest mb-1">Active Deliveries</Text>
-                    <Text style={{ fontFamily: 'Poppins_700Bold' }} className="text-white text-4xl">24</Text>
+                    <Text style={{ fontFamily: 'Poppins_700Bold' }} className="text-white text-4xl">{activeDeliveriesCount}</Text>
                     <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-white/70 text-sm mt-2">Packages moving through your fleet today</Text>
                     <TouchableOpacity className="bg-white/20 self-start mt-4 px-4 py-2 rounded-lg">
                         <Text style={{ fontFamily: 'Manrope_600SemiBold' }} className="text-white text-xs">View Report</Text>
@@ -113,25 +160,32 @@ export default function AdminDashboardScreen() {
                 </View>
 
                 <View className="mb-10">
-                    {RECENT_SCANS.map((scan, idx) => (
-                        <View
-                            key={scan.id}
-                            className="flex-row items-center p-4 bg-slate-50 rounded-lg mb-3 border border-slate-100">
-                            <View className="w-11 h-11 bg-white rounded-lg items-center justify-center border border-slate-100">
-                                <Ionicons name="cube-outline" size={20} color="#F0782D" />
-                            </View>
-                            <View className="flex-1 ml-4">
-                                <Text style={{ fontFamily: 'Manrope_600SemiBold' }} className="text-brand-secondary text-sm">{scan.id}</Text>
-                                <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-xs mt-0.5">{scan.admin}</Text>
-                            </View>
-                            <View className="items-end">
-                                <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-xs">{scan.time}</Text>
-                                <View className="mt-1 bg-green-100 px-2 py-0.5 rounded">
-                                    <Text style={{ fontFamily: 'Manrope_600SemiBold' }} className="text-green-700 text-[10px]">{scan.status}</Text>
+                    {recentScans.length === 0 ? (
+                        <View className="p-10 items-center justify-center bg-slate-50 rounded-lg border border-slate-100">
+                            <Ionicons name="documents-outline" size={32} color="#CBD5E1" />
+                            <Text className="text-slate-400 mt-2 font-medium">No recent scans</Text>
+                        </View>
+                    ) : (
+                        recentScans.map((scan: any) => (
+                            <View
+                                key={scan.key}
+                                className="flex-row items-center p-4 bg-slate-50 rounded-lg mb-3 border border-slate-100">
+                                <View className="w-11 h-11 bg-white rounded-lg items-center justify-center border border-slate-100">
+                                    <Ionicons name="cube-outline" size={20} color="#F0782D" />
+                                </View>
+                                <View className="flex-1 ml-4">
+                                    <Text style={{ fontFamily: 'Manrope_600SemiBold' }} className="text-brand-secondary text-sm">{scan.id}</Text>
+                                    <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-xs mt-0.5">{scan.admin}</Text>
+                                </View>
+                                <View className="items-end">
+                                    <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-xs">{scan.time}</Text>
+                                    <View className="mt-1 bg-green-100 px-2 py-0.5 rounded">
+                                        <Text style={{ fontFamily: 'Manrope_600SemiBold' }} className="text-green-700 text-[10px]">{scan.status}</Text>
+                                    </View>
                                 </View>
                             </View>
-                        </View>
-                    ))}
+                        ))
+                    )}
                 </View>
             </View>
         </ScrollView>

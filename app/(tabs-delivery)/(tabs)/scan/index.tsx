@@ -1,8 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { CameraView, scanFromURLAsync, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useRef, useState } from 'react';
 import {
     Alert,
     Image,
@@ -17,7 +17,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SHIPMENTS } from '../../../src/data/shipments';
+import { SHIPMENTS } from '@/src/data/shipments';
 
 type ScanMode = 'camera' | 'manual';
 type ScanType = 'delivery' | 'shipment';
@@ -37,6 +37,7 @@ const SCAN_TYPES: { value: ScanType; label: string; icon: string; description: s
     },
 ];
 
+/** Compact pill toggle shown over the camera */
 const CameraScanTypePill = ({
     value,
     onChange,
@@ -78,26 +79,37 @@ const CameraScanTypePill = ({
     </View>
 );
 
-export default function AdminScanScreen() {
+export default function DeliveryPersonScanScreen() {
     const [permission, requestPermission] = useCameraPermissions();
     const [mode, setMode] = useState<ScanMode>('camera');
     const [scanType, setScanType] = useState<ScanType>('delivery');
-    const insets = useSafeAreaInsets();
     const [manualId, setManualId] = useState('');
-    const [scanning, setScanning] = useState(true);
+    const [scanning, setScanning] = useState(false);
     const router = useRouter();
+
+    useFocusEffect(
+        useCallback(() => {
+            const timer = setTimeout(() => setScanning(true), 300);
+            return () => {
+                clearTimeout(timer);
+                setScanning(false);
+            };
+        }, [])
+    );
+
     const inputRef = useRef<TextInput>(null);
+    const insets = useSafeAreaInsets();
 
     const navigate = (trackingCode: string, flow?: string) => {
         if (scanType === 'shipment') {
             router.push({
-                pathname: '/(tabs)/scan/shipment-result',
+                pathname: '/(tabs-delivery)/scan/shipment-result',
                 params: { trackingCode },
             } as any);
         } else {
             const deliveryFlow = flow ?? (trackingCode.charCodeAt(0) % 2 === 0 ? 'pickup' : 'delivery');
             router.push({
-                pathname: '/(tabs)/scan/result',
+                pathname: '/(tabs-delivery)/scan/result',
                 params: { trackingId: trackingCode, flow: deliveryFlow },
             } as any);
         }
@@ -127,11 +139,10 @@ export default function AdminScanScreen() {
 
     const handleBarcodeScanned = ({ data }: { data: string }) => {
         if (!scanning) return;
-        setScanning(false);
+        setScanning(false); // re-enabled by useFocusEffect when screen refocuses
         let id = data;
         if (data.includes('hobortgo.com/')) id = data.split('/').pop() ?? data;
         Vibration.vibrate(100);
-        setTimeout(() => setScanning(true), 2000);
         navigate(id);
     };
 
@@ -250,7 +261,7 @@ export default function AdminScanScreen() {
                         {/* Illustration */}
                         <View className="items-center mb-5">
                             <Image
-                                source={require('../../../assets/images/illustrations/scan_package.webp')}
+                                source={require('@/assets/images/illustrations/scan_package.webp')}
                                 style={{ width: 140, height: 120 }}
                                 resizeMode="contain"
                             />
@@ -338,6 +349,11 @@ export default function AdminScanScreen() {
     }
 
     // ── Camera mode ────────────────────────────────────────────────────────────
+    const cameraSubtitle =
+        scanType === 'shipment'
+            ? 'Point camera at the shipment batch QR code'
+            : 'Point camera at label barcode or QR';
+
     return (
         <View className="flex-1 bg-black">
             <CameraView
@@ -363,9 +379,7 @@ export default function AdminScanScreen() {
                         {scanType === 'shipment' ? 'Scan Shipment Batch QR' : 'Scan Delivery QR Code'}
                     </Text>
                     <Text style={{ fontFamily: 'Manrope_400Regular', color: 'rgba(255,255,255,0.6)', fontSize: 12, marginBottom: 16 }}>
-                        {scanType === 'shipment'
-                            ? 'Point camera at the shipment batch QR code'
-                            : 'Point camera at label barcode or QR'}
+                        {cameraSubtitle}
                     </Text>
                     <TouchableOpacity
                         onPress={handleScanFromImage}
@@ -386,7 +400,7 @@ export default function AdminScanScreen() {
                 </View>
             </View>
 
-            {/* Top controls — no back button since scan is a Tab */}
+            {/* Top controls — no back button since scan is a Tab root */}
             <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingTop: insets.top }}>
                 <View className="flex-row justify-end items-center px-5 pt-4 mb-4">
                     <TouchableOpacity
