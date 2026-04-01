@@ -13,12 +13,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getDeliveryById } from '../../../src/api/delivery';
 import { IDelivery } from '../../../src/types/delivery.types';
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string; icon: string }> = {
-    Pending: { bg: '#fef3c7', text: '#92400e', dot: '#d97706', icon: 'time-outline' },
-    Scheduled: { bg: '#e6f0f5', text: '#1e4b69', dot: '#1e4b69', icon: 'calendar-outline' },
-    'In-transit': { bg: '#fff0e6', text: '#f0782d', dot: '#f0782d', icon: 'bicycle-outline' },
-    Delivered: { bg: '#f0fdf4', text: '#16a34a', dot: '#16a34a', icon: 'checkmark-circle-outline' },
-    Failed: { bg: '#fef2f2', text: '#dc2626', dot: '#dc2626', icon: 'close-circle-outline' },
+const STATUS_CONFIG: Record<string, { bg: string; text: string; icon: string }> = {
+    'Pending': { bg: '#fff0e6', text: '#f0782d', icon: 'time-outline' },
+    'In-transit': { bg: '#f3f0ff', text: '#7c3aed', icon: 'bicycle-outline' },
+    'In Transit': { bg: '#f3f0ff', text: '#7c3aed', icon: 'bicycle-outline' },
+    'Out for Delivery': { bg: '#f3f0ff', text: '#7c3aed', icon: 'bicycle-outline' },
+    'Scheduled': { bg: '#fef9c3', text: '#a16207', icon: 'calendar-outline' },
+    'Delivered': { bg: '#dcfce7', text: '#16a34a', icon: 'checkmark-circle-outline' },
+    'Confiscated': { bg: '#fee2e2', text: '#dc2626', icon: 'alert-circle-outline' },
+    'Received': { bg: '#e0f2fe', text: '#0369a1', icon: 'archive-outline' },
+    'ReceivedGH': { bg: '#e0f2fe', text: '#0369a1', icon: 'archive-outline' },
+    'Failed': { bg: '#fef2f2', text: '#dc2626', icon: 'close-circle-outline' },
 };
 
 function SectionLabel({ label }: { label: string }) {
@@ -77,6 +82,9 @@ export default function DeliveryDetailScreen() {
 
     useEffect(() => {
         (async () => {
+            setLoading(true);
+            setDelivery(null);
+            setError(false);
             try {
                 const res = await getDeliveryById(id as string);
                 setDelivery(res.data ?? res);
@@ -121,7 +129,7 @@ export default function DeliveryDetailScreen() {
     }
 
     const shipment = delivery.shipmentId;
-    const statusLabel = delivery.statusId?.status ?? 'Pending';
+    const statusLabel = delivery.statusId?.status ?? delivery.shipmentId?.status?.status ?? 'Pending';
     const cfg = STATUS_CONFIG[statusLabel] ?? STATUS_CONFIG.Pending;
     const canUpdate = ['Pending', 'Scheduled', 'In-transit'].includes(statusLabel);
 
@@ -187,11 +195,11 @@ export default function DeliveryDetailScreen() {
                     style={{ backgroundColor: cfg.bg }}
                     className="rounded-xl p-5 mt-5 overflow-hidden">
                     <View className="absolute -right-8 -top-8 w-32 h-32 rounded-full"
-                        style={{ backgroundColor: cfg.dot, opacity: 0.08 }} />
+                        style={{ backgroundColor: cfg.text, opacity: 0.08 }} />
                     <View className="flex-row items-center gap-3 mb-3">
                         <View className="w-10 h-10 rounded-full items-center justify-center"
-                            style={{ backgroundColor: cfg.dot + '22' }}>
-                            <Ionicons name={cfg.icon as any} size={20} color={cfg.dot} />
+                            style={{ backgroundColor: cfg.text + '22' }}>
+                            <Ionicons name={cfg.icon as any} size={20} color={cfg.text} />
                         </View>
                         <View>
                             <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11, color: cfg.text, opacity: 0.7 }}>

@@ -19,6 +19,8 @@ export default function AdminTabLayout() {
   return (
     <RoleGuard allowedRoles={['admin', 'super_admin']}>
     <Tabs
+      initialRouteName="index"
+      backBehavior="history"
       screenOptions={{
         tabBarActiveTintColor: '#f0782d',
         tabBarInactiveTintColor: '#9CA3AF',
@@ -45,7 +47,7 @@ export default function AdminTabLayout() {
       />
       {/* Tab 3 — Shipments */}
       <Tabs.Screen
-        name="shipments/index"
+        name="shipments"
         options={{
           title: 'Shipments',
           tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'cube' : 'cube-outline'} color={color} />,
@@ -53,7 +55,7 @@ export default function AdminTabLayout() {
       />
       {/* Tab 4 — Deliveries */}
       <Tabs.Screen
-        name="deliveries/index"
+        name="deliveries"
         options={{
           title: 'Deliveries',
           tabBarIcon: ({ color, size, focused }) => <IconSymbol size={size ?? 24} name={focused ? 'bicycle' : 'bicycle-outline'} color={color} />,
@@ -70,10 +72,7 @@ export default function AdminTabLayout() {
 
       {/* ── Hidden screens ── */}
       <Tabs.Screen name="scanner" options={{ href: null }} />
-      <Tabs.Screen name="notifications/index" options={{ href: null }} />
-      <Tabs.Screen name="deliveries/[id]" options={{ href: null }} />
-      <Tabs.Screen name="deliveries/[id]/update" options={{ href: null }} />
-      <Tabs.Screen name="shipments/[id]" options={{ href: null }} />
+      <Tabs.Screen name="notifications" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
     </RoleGuard>

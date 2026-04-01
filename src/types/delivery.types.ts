@@ -8,6 +8,25 @@ export interface IDeliveryStatus {
     description: string;
 }
 
+export interface IDelivery {
+    _id: string;
+    shipmentId: any;
+    type: DeliveryType;
+    statusId: IDeliveryStatus | null;
+    timestamp: string;
+    receiveType: ReceiveType;
+    receivedBy?: any;
+    address?: string;
+    digitalAddress?: string;
+    landmark?: string;
+    location?: string;
+    deliveredBy?: any;
+    notes?: string;
+    isVisible: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface IDeliveryPayload {
     shipmentId: string;
     type: DeliveryType;
