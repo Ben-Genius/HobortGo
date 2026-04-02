@@ -3,7 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Dimensions, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { getShipmentStatusList } from '../../../src/api/shipment';
+import { getShipmentStatuses } from '../../../src/api/shipmentStatus';
 import { getShipmentMasterById, updateShipmentMasterStatus } from '../../../src/api/shipmentMaster';
 import { IShipmentMaster } from '../../../src/types/shipment.types';
 
@@ -100,8 +100,8 @@ export default function AdminShipmentDetailScreen() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await getShipmentStatusList({ offset: 0, limit: 100 });
-                setStatuses(Array.isArray(res) ? res : res.data ?? []);
+                const res = await getShipmentStatuses({ offset: 0, limit: 100 });
+                setStatuses(res.data ?? []);
             } catch { }
         })();
     }, []);

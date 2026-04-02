@@ -42,9 +42,18 @@ export interface IShipmentListResponse {
 
 // ─── Shipment Master ──────────────────────────────────────────────────────────
 
+export interface ITimelineEvent {
+    status: string;
+    location?: string;
+    notes?: string;
+    timestamp: string;
+    picture?: string;
+}
+
 export interface IShipmentMaster {
     _id: string;
     name: string;
+    code?: string;
     description?: string;
     shipmentType: ShipmentType;
     scheduleArrival: string;
@@ -52,6 +61,9 @@ export interface IShipmentMaster {
     statusId: string;
     status?: IShipmentStatus;
     shipments?: IShipment[];
+    timeline?: ITimelineEvent[];
+    flagged?: boolean;
+    flagReason?: string;
     createdAt: string;
     updatedAt: string;
 }

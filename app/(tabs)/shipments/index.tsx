@@ -1,113 +1,160 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { FlatList, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getShipmentMasters } from '../../../src/api/shipmentMaster';
+import { getShipmentStatuses } from '../../../src/api/shipmentStatus';
+import { useAuthStore } from '../../../src/store/authStore';
+import { IShipmentMaster, IShipmentStatus } from '../../../src/types/shipment.types';
 
-const STATUS_FILTERS = ['All', 'Received', 'In Transit', 'Arrived', 'Ready', 'Delivered'] as const;
-type StatusFilter = typeof STATUS_FILTERS[number];
-
-const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string }> = {
-    Received: { bg: '#e6f0f5', text: '#1e4b69', dot: '#1e4b69' },
-    'In Transit': { bg: '#fff0e6', text: '#f0782d', dot: '#f0782d' },
-    Arrived: { bg: '#f3f0ff', text: '#7c3aed', dot: '#7c3aed' },
-    Ready: { bg: '#fef9c3', text: '#a16207', dot: '#a16207' },
-    Delivered: { bg: '#f0fdf4', text: '#16a34a', dot: '#16a34a' },
-    Pending: { bg: '#fef3c7', text: '#d97706', dot: '#d97706' },
-    Failed: { bg: '#fef2f2', text: '#dc2626', dot: '#dc2626' },
+const STATUS_COLOR: Record<string, { bg: string; text: string; dot: string }> = {
+    'Processing':   { bg: '#fef9c3', text: '#a16207',  dot: '#a16207' },
+    'In-transit':   { bg: '#fff0e6', text: '#f0782d',  dot: '#f0782d' },
+    'In Transit':   { bg: '#fff0e6', text: '#f0782d',  dot: '#f0782d' },
+    'Received':     { bg: '#e0f2fe', text: '#0369a1',  dot: '#0369a1' },
+    'ReceivedGH':   { bg: '#e0f2fe', text: '#0369a1',  dot: '#0369a1' },
+    'Accepted':     { bg: '#ede9fe', text: '#7c3aed',  dot: '#7c3aed' },
+    'Ready':        { bg: '#fef9c3', text: '#a16207',  dot: '#a16207' },
+    'Delivered':    { bg: '#f0fdf4', text: '#16a34a',  dot: '#16a34a' },
+    'Confiscated':  { bg: '#fee2e2', text: '#dc2626',  dot: '#dc2626' },
+    'Scheduled':    { bg: '#fef9c3', text: '#a16207',  dot: '#a16207' },
+    'Pending':      { bg: '#fef3c7', text: '#d97706',  dot: '#d97706' },
 };
 
-const STAT_OVERVIEW = [
-    { label: 'Total', value: 6, color: '#1e4b69', bg: '#e6f0f5' },
-    { label: 'In Transit', value: 1, color: '#f0782d', bg: '#fff0e6' },
-    { label: 'Ready', value: 1, color: '#a16207', bg: '#fef9c3' },
-    { label: 'Delivered', value: 1, color: '#16a34a', bg: '#f0fdf4' },
-];
+function getStatusCfg(status?: string) {
+    return STATUS_COLOR[status ?? ''] ?? { bg: '#f1f5f9', text: '#64748b', dot: '#94a3b8' };
+}
 
-const DUMMY_SHIPMENTS = [
-    { id: '1', trackingId: 'HB-10041', sender: 'Amazon US', recipient: 'Kofi Asante', status: 'Received', origin: 'USA', weight: 2.3, date: 'Today, 2:15 PM', flagged: false },
-    { id: '2', trackingId: 'HB-10039', sender: 'Shein', recipient: 'Abena Mensah', status: 'In Transit', origin: 'China', weight: 0.8, date: 'Today, 1:47 PM', flagged: false },
-    { id: '3', trackingId: 'HB-10035', sender: 'eBay', recipient: 'Kwame Boateng', status: 'Arrived', origin: 'UK', weight: 5.1, date: 'Yesterday', flagged: false },
-    { id: '4', trackingId: 'HB-10029', sender: 'AliExpress', recipient: 'Ama Darko', status: 'Ready', origin: 'China', weight: 1.2, date: 'Mon, 24th', flagged: true },
-    { id: '5', trackingId: 'HB-10023', sender: 'Nike US', recipient: 'John Doe', status: 'Delivered', origin: 'USA', weight: 0.5, date: 'Fri, 21st', flagged: false },
-    { id: '6', trackingId: 'HB-10018', sender: 'Apple', recipient: 'Yaw Osei', status: 'Received', origin: 'USA', weight: 1.8, date: 'Fri, 21st', flagged: true },
-];
+function fmtDate(d?: string) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
 export default function AdminShipmentsScreen() {
     const router = useRouter();
-    const [activeFilter, setActiveFilter] = useState<StatusFilter>('All');
+    const token = useAuthStore(state => state.token);
+    const [masters, setMasters] = useState<IShipmentMaster[]>([]);
+    const [statuses, setStatuses] = useState<IShipmentStatus[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [activeFilter, setActiveFilter] = useState<string>('All');
     const [searchText, setSearchText] = useState('');
 
-    const filtered = DUMMY_SHIPMENTS.filter(s => {
-        const matchesFilter = activeFilter === 'All' || s.status === activeFilter;
-        const matchesSearch = searchText === '' ||
-            s.trackingId.toLowerCase().includes(searchText.toLowerCase()) ||
-            s.recipient.toLowerCase().includes(searchText.toLowerCase());
+    useEffect(() => {
+        if (!token) return;
+        (async () => {
+            try {
+                const [mastersRes, statusesRes] = await Promise.all([
+                    getShipmentMasters({ offset: 0, limit: 100 }),
+                    getShipmentStatuses({ offset: 0, limit: 100 }),
+                ]);
+                setMasters(mastersRes.data ?? []);
+                setStatuses(statusesRes.data ?? []);
+            } catch (e) {
+                console.error('Shipments fetch error:', e);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, [token]);
+
+    const filterOptions = ['All', ...statuses.map(s => s.status)];
+
+    const filtered = masters.filter(m => {
+        const matchesFilter = activeFilter === 'All' || m.status?.status === activeFilter;
+        const q = searchText.toLowerCase();
+        const matchesSearch = q === '' ||
+            (m.code ?? '').toLowerCase().includes(q) ||
+            m.name.toLowerCase().includes(q);
         return matchesFilter && matchesSearch;
     });
 
-    const renderItem = ({ item }: { item: typeof DUMMY_SHIPMENTS[0] }) => {
-        const cfg = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.Received;
+    // Stat grid — computed from loaded data
+    const statCards = [
+        { label: 'Total',      value: masters.length,                                                        color: '#1e4b69', bg: '#e6f0f5' },
+        { label: 'In-transit', value: masters.filter(m => m.status?.status === 'In-transit').length,         color: '#f0782d', bg: '#fff0e6' },
+        { label: 'Received',   value: masters.filter(m => ['Received','ReceivedGH'].includes(m.status?.status ?? '')).length, color: '#0369a1', bg: '#e0f2fe' },
+        { label: 'Delivered',  value: masters.filter(m => m.status?.status === 'Delivered').length,          color: '#16a34a', bg: '#f0fdf4' },
+    ];
+
+    const renderItem = useCallback(({ item }: { item: IShipmentMaster }) => {
+        const cfg = getStatusCfg(item.status?.status);
+        const pkgCount = item.shipments?.length ?? 0;
         return (
             <TouchableOpacity
                 activeOpacity={0.85}
-                className="bg-slate-50 rounded-lg p-4 mb-3 border border-slate-100"
-                onPress={() => router.push(`/(tabs)/shipments/${item.id}` as any)}>
+                className="bg-slate-50 rounded-xl p-4 mb-3 border border-slate-100"
+                onPress={() => router.push(`/(tabs)/shipments/${item._id}` as any)}>
 
-                {/* Row 1 — Tracking ID + Status badge */}
-                <View className="flex-row justify-between items-center mb-3">
-                    <View className="flex-row items-center gap-2">
-                        {item.flagged && (
-                            <View className="w-2 h-2 bg-red-500 rounded-full" />
-                        )}
-                        <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-base">
-                            {item.trackingId}
+                {/* Row 1 — Name + Status badge */}
+                <View className="flex-row justify-between items-start mb-2.5">
+                    <View className="flex-1 pr-3">
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 14 }} className="text-brand-secondary" numberOfLines={1}>
+                            {item.name}
                         </Text>
+                        {item.code ? (
+                            <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11 }} className="text-slate-400 mt-0.5">
+                                #{item.code}
+                            </Text>
+                        ) : null}
                     </View>
-                    <View style={{ backgroundColor: cfg.bg }} className="px-3 py-1 rounded-full flex-row items-center gap-1.5">
-                        <View style={{ backgroundColor: cfg.dot }} className="w-1.5 h-1.5 rounded-full" />
+                    <View style={{ backgroundColor: cfg.bg }} className="px-3 py-1 rounded-full flex-row items-center gap-1.5 shrink-0">
+                        <View style={{ backgroundColor: cfg.dot, width: 6, height: 6, borderRadius: 3 }} />
                         <Text style={{ color: cfg.text, fontFamily: 'Manrope_600SemiBold', fontSize: 10 }}>
-                            {item.status}
+                            {item.status?.status ?? 'Unknown'}
                         </Text>
                     </View>
                 </View>
 
-                {/* Row 2 — Recipient + Origin side by side */}
-                <View className="flex-row gap-4 mb-3">
-                    <View className="flex-1 flex-row items-center gap-2">
-                        <Ionicons name="person-outline" size={13} color="#94A3B8" />
-                        <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-brand-secondary text-sm flex-1" numberOfLines={1}>
-                            {item.recipient}
-                        </Text>
-                    </View>
-                    <View className="flex-row items-center gap-2">
-                        <Ionicons name="earth-outline" size={13} color="#94A3B8" />
-                        <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-xs">
-                            {item.origin}
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Row 3 — Weight + Date */}
-                <View className="flex-row justify-between items-center pt-3 border-t border-slate-100">
+                {/* Row 2 — Type + Package count */}
+                <View className="flex-row gap-4 mb-2.5">
                     <View className="flex-row items-center gap-1.5">
-                        <Ionicons name="scale-outline" size={12} color="#94A3B8" />
-                        <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-xs">
-                            {item.weight} kg · {item.sender}
+                        <Ionicons name="airplane-outline" size={13} color="#94A3B8" />
+                        <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 12 }} className="text-slate-500">
+                            {item.shipmentType}
                         </Text>
                     </View>
-                    <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-xs">
-                        {item.date}
-                    </Text>
+                    <View className="flex-row items-center gap-1.5">
+                        <Ionicons name="cube-outline" size={13} color="#94A3B8" />
+                        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 12 }} className="text-slate-400">
+                            {pkgCount} package{pkgCount !== 1 ? 's' : ''}
+                        </Text>
+                    </View>
                 </View>
+
+                {/* Row 3 — ETA + Created */}
+                <View className="flex-row justify-between items-center pt-2.5 border-t border-slate-100">
+                    <View className="flex-row items-center gap-1.5">
+                        <Ionicons name="calendar-outline" size={12} color="#94A3B8" />
+                        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 11 }} className="text-slate-400">
+                            ETA <Text style={{ fontFamily: 'Manrope_600SemiBold' }} className="text-slate-500">{fmtDate(item.scheduleArrival)}</Text>
+                        </Text>
+                    </View>
+                    <View className="flex-row items-center gap-1">
+                        <Ionicons name="time-outline" size={11} color="#CBD5E1" />
+                        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 11 }} className="text-slate-400">
+                            {fmtDate(item.createdAt)}
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Flagged indicator */}
+                {item.flagged ? (
+                    <View className="mt-2 flex-row items-center gap-1.5 bg-red-50 border border-red-100 rounded-lg px-2.5 py-1.5">
+                        <Ionicons name="flag" size={11} color="#EF4444" />
+                        <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 11 }} className="text-red-500">
+                            {item.flagReason ?? 'Flagged'}
+                        </Text>
+                    </View>
+                ) : null}
             </TouchableOpacity>
         );
-    };
+    }, [router]);
 
     return (
         <SafeAreaView className="flex-1 bg-white">
             {/* ── Header ── */}
-            <View className="pt-6 pb-4 px-5">
+            <View className="pt-4 pb-4 px-5">
                 {/* Title row */}
                 <View className="flex-row justify-between items-center mb-5">
                     <View>
@@ -124,33 +171,37 @@ export default function AdminShipmentsScreen() {
                 </View>
 
                 {/* Stat grid — 2×2 */}
-                <View className="flex-row flex-wrap mb-5" style={{ gap: 8 }}>
-                    {STAT_OVERVIEW.map(s => (
-                        <View
-                            key={s.label}
-                            style={{ backgroundColor: s.bg, width: '48.5%' }}
-                            className="rounded-lg px-4 py-3 overflow-hidden">
-                            {/* Single bubble */}
+                {loading ? (
+                    <View className="items-center justify-center py-6">
+                        <ActivityIndicator color="#F0782D" />
+                    </View>
+                ) : (
+                    <View className="flex-row flex-wrap mb-5" style={{ gap: 8 }}>
+                        {statCards.map(s => (
                             <View
-                                style={{ backgroundColor: s.color, opacity: 0.1, position: 'absolute', top: -16, right: -18 }}
-                                className="w-24 h-24 rounded-full"
-                            />
-                            <Text style={{ color: s.color, fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="uppercase tracking-widest mb-1">
-                                {s.label}
-                            </Text>
-                            <Text style={{ color: s.color, fontFamily: 'Poppins_700Bold', fontSize: 26 }}>
-                                {s.value}
-                            </Text>
-                        </View>
-                    ))}
-                </View>
+                                key={s.label}
+                                style={{ backgroundColor: s.bg, width: '48.5%' }}
+                                className="rounded-xl px-4 py-3 overflow-hidden">
+                                <View
+                                    style={{ backgroundColor: s.color, opacity: 0.08, position: 'absolute', top: -16, right: -18, width: 88, height: 88, borderRadius: 44 }}
+                                />
+                                <Text style={{ color: s.color, fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="uppercase tracking-widest mb-1">
+                                    {s.label}
+                                </Text>
+                                <Text style={{ color: s.color, fontFamily: 'Poppins_700Bold', fontSize: 26 }}>
+                                    {s.value}
+                                </Text>
+                            </View>
+                        ))}
+                    </View>
+                )}
 
                 {/* Search bar */}
-                <View className="bg-slate-50 rounded-lg flex-row items-center px-4 py-3.5 mb-4 border border-slate-100">
+                <View className="bg-slate-50 rounded-xl flex-row items-center px-4 py-3.5 mb-4 border border-slate-100">
                     <Ionicons name="search-outline" size={18} color="#94A3B8" />
                     <TextInput
                         style={{ fontFamily: 'Manrope_400Regular', flex: 1, marginLeft: 10, fontSize: 14, color: '#1e4b69' }}
-                        placeholder="Search tracking ID or recipient…"
+                        placeholder="Search name or code…"
                         placeholderTextColor="#94A3B8"
                         value={searchText}
                         onChangeText={setSearchText}
@@ -164,7 +215,7 @@ export default function AdminShipmentsScreen() {
 
                 {/* Filter pills */}
                 <FlatList
-                    data={STATUS_FILTERS as unknown as StatusFilter[]}
+                    data={filterOptions}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     keyExtractor={item => item}
@@ -188,37 +239,36 @@ export default function AdminShipmentsScreen() {
             </View>
 
             {/* ── List ── */}
-            <View className="flex-row justify-between items-center px-5 mb-2 mt-1">
-                <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-base">
-                    {filtered.length} {activeFilter === 'All' ? 'Packages' : activeFilter}
-                </Text>
-                <TouchableOpacity>
-                    <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-brand-orange text-sm">
-                        Sort
+            {!loading && (
+                <View className="flex-row justify-between items-center px-5 mb-2">
+                    <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-base">
+                        {filtered.length} {activeFilter === 'All' ? 'Shipments' : activeFilter}
                     </Text>
-                </TouchableOpacity>
-            </View>
+                </View>
+            )}
 
             <FlatList
-                data={filtered}
-                keyExtractor={item => item.id}
+                data={loading ? [] : filtered}
+                keyExtractor={item => item._id}
                 renderItem={renderItem}
                 contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 110 }}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
-                    <View className="items-center mt-16 px-12">
-                        <Image
-                            source={require('../../../assets/images/illustrations/shipment_box.webp')}
-                            style={{ width: 120, height: 120, marginBottom: 16 }}
-                            resizeMode="contain"
-                        />
-                        <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-lg text-center">
-                            No Shipments Found
-                        </Text>
-                        <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-sm text-center mt-2">
-                            Try adjusting your filters or search terms.
-                        </Text>
-                    </View>
+                    loading ? null : (
+                        <View className="items-center mt-16 px-12">
+                            <Image
+                                source={require('../../../assets/images/illustrations/shipment_box.webp')}
+                                style={{ width: 120, height: 120, marginBottom: 16 }}
+                                resizeMode="contain"
+                            />
+                            <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-lg text-center">
+                                No Shipments Found
+                            </Text>
+                            <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-sm text-center mt-2">
+                                Try adjusting your filters or search terms.
+                            </Text>
+                        </View>
+                    )
                 }
             />
         </SafeAreaView>

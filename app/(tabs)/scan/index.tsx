@@ -17,7 +17,6 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SHIPMENTS } from '../../../src/data/shipments';
 
 type ScanMode = 'camera' | 'manual';
 type ScanType = 'delivery' | 'shipment';
@@ -277,27 +276,6 @@ export default function AdminScanScreen() {
                             returnKeyType="done"
                             onSubmitEditing={handleManualSubmit}
                         />
-
-                        {/* Quick demo chips — delivery only */}
-                        {scanType === 'delivery' && (
-                            <>
-                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-400 uppercase tracking-widest mb-2 text-center">
-                                    Quick Demo — tap a shipment
-                                </Text>
-                                <View className="flex-row flex-wrap gap-2 justify-center mb-4">
-                                    {SHIPMENTS.slice(0, 6).map(s => (
-                                        <TouchableOpacity
-                                            key={s.id}
-                                            onPress={() => navigate(s.trackingId, s.deliveryStatus === 'Pending' ? 'pickup' : 'delivery')}
-                                            className="bg-slate-50 border border-slate-200 rounded-full px-4 py-2">
-                                            <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 12 }} className="text-brand-secondary">
-                                                {s.trackingId}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </>
-                        )}
 
                         <TouchableOpacity
                             className={`rounded-lg py-4 items-center flex-row justify-center gap-2 ${manualId.trim() ? 'bg-brand-orange' : 'bg-slate-100'}`}
