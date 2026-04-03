@@ -2,9 +2,11 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Dimensions, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { getShipmentStatuses } from '../../../src/api/shipmentStatus';
+import { ActivityIndicator, Dimensions, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { getShipmentMasterById, updateShipmentMasterStatus } from '../../../src/api/shipmentMaster';
+import { getShipmentStatuses } from '../../../src/api/shipmentStatus';
+import { ActionSheet, ActionSheetOption } from '../../../src/components/ui/ActionSheet';
+import { AppModal } from '../../../src/components/ui/AppModal';
 import { IShipmentMaster } from '../../../src/types/shipment.types';
 
 const FLAG_REASONS = ['Damaged', 'Missing Item', 'Customs Hold', 'Discrepancy'] as const;
@@ -12,16 +14,36 @@ const FLAG_REASONS = ['Damaged', 'Missing Item', 'Customs Hold', 'Discrepancy'] 
 const STATUS_MAP: Record<string, { bg: string; color: string }> = {
     'Processing': { bg: '#FEF9C3', color: '#CA8A04' },
     'In-transit': { bg: '#DBEAFE', color: '#2563EB' },
-    'Received': { bg: '#DCFCE7', color: '#16A34A' },
-    'Accepted': { bg: '#EDE9FE', color: '#7C3AED' },
-    'Delivered': { bg: '#DCFCE7', color: '#16A34A' },
-    'PickUp': { bg: '#FFEDD5', color: '#EA580C' },
+    'Received':   { bg: '#DCFCE7', color: '#16A34A' },
+    'Accepted':   { bg: '#EDE9FE', color: '#7C3AED' },
+    'Delivered':  { bg: '#DCFCE7', color: '#16A34A' },
+    'PickUp':     { bg: '#FFEDD5', color: '#EA580C' },
 };
 
 const getStatus = (s: string) => STATUS_MAP[s] ?? { bg: '#F1F5F9', color: '#64748B' };
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 type Tab = 'details' | 'timeline' | 'packages';
+
+// ─── Modal state shapes ───────────────────────────────────────────────────────
+interface FeedbackModal {
+    visible: boolean;
+    type: 'success' | 'error' | 'info' | 'warning';
+    title: string;
+    message: string;
+    onConfirm?: () => void;
+    confirmLabel?: string;
+}
+
+interface SheetState {
+    visible: boolean;
+    title: string;
+    subtitle?: string;
+    options: ActionSheetOption[];
+}
+
+const HIDDEN_FEEDBACK: FeedbackModal = { visible: false, type: 'info', title: '', message: '' };
+const HIDDEN_SHEET: SheetState = { visible: false, title: '', options: [] };
 
 export default function AdminShipmentDetailScreen() {
     const { id } = useLocalSearchParams();
@@ -33,57 +55,64 @@ export default function AdminShipmentDetailScreen() {
     const [statuses, setStatuses] = useState<any[]>([]);
     const [tab, setTab] = useState<Tab>('details');
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    // Status update modal
+
+    // Status update bottom sheet form
     const [updateModal, setUpdateModal] = useState<{ visible: boolean; status: any | null }>({ visible: false, status: null });
     const [updateNotes, setUpdateNotes] = useState('');
     const [updateLocation, setUpdateLocation] = useState('');
     const [updating, setUpdating] = useState(false);
     const [updateImageUri, setUpdateImageUri] = useState<string | null>(null);
 
-    const pickUpdateImage = useCallback(async () => {
-        Alert.alert('Attach Photo', 'Choose a source', [
-            {
-                text: '📷  Take Photo',
-                onPress: async () => {
-                    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-                    if (status !== 'granted') {
-                        Alert.alert('Permission needed', 'Allow camera access to take a photo.');
-                        return;
-                    }
-                    try {
-                        const result = await ImagePicker.launchCameraAsync({
-                            mediaTypes: 'images',
-                            quality: 0.8,
-                            allowsEditing: true,
-                            aspect: [4, 3],
-                        });
-                        if (!result.canceled && result.assets[0]) setUpdateImageUri(result.assets[0].uri);
-                    } catch {
-                        Alert.alert('Camera unavailable', 'Camera is not available on this device.');
-                    }
-                },
-            },
-            {
-                text: '🖼️  Choose from Library',
-                onPress: async () => {
-                    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                    if (status !== 'granted') {
-                        Alert.alert('Permission needed', 'Allow photo library access.');
-                        return;
-                    }
-                    const result = await ImagePicker.launchImageLibraryAsync({
-                        mediaTypes: 'images',
-                        quality: 0.8,
-                        allowsEditing: true,
-                        aspect: [4, 3],
-                    });
-                    if (!result.canceled && result.assets[0]) setUpdateImageUri(result.assets[0].uri);
-                },
-            },
-            { text: 'Cancel', style: 'cancel' },
-        ]);
+    // Custom modal & action sheet state
+    const [feedback, setFeedback] = useState<FeedbackModal>(HIDDEN_FEEDBACK);
+    const [sheet, setSheet] = useState<SheetState>(HIDDEN_SHEET);
+
+    const showFeedback = useCallback((f: Omit<FeedbackModal, 'visible'>) => {
+        setFeedback({ ...f, visible: true });
     }, []);
 
+    // ── Image picker ─────────────────────────────────────────────────────────
+    const pickUpdateImage = useCallback(() => {
+        setSheet({
+            visible: true,
+            title: 'Attach Photo',
+            subtitle: 'Choose a source for the photo',
+            options: [
+                {
+                    label: 'Take Photo',
+                    icon: 'camera-outline',
+                    onPress: async () => {
+                        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+                        if (status !== 'granted') {
+                            showFeedback({ type: 'warning', title: 'Permission needed', message: 'Allow camera access to take a photo.' });
+                            return;
+                        }
+                        try {
+                            const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8, allowsEditing: true, aspect: [4, 3] });
+                            if (!result.canceled && result.assets[0]) setUpdateImageUri(result.assets[0].uri);
+                        } catch {
+                            showFeedback({ type: 'error', title: 'Camera unavailable', message: 'Camera is not available on this device.' });
+                        }
+                    },
+                },
+                {
+                    label: 'Choose from Library',
+                    icon: 'image-outline',
+                    onPress: async () => {
+                        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                        if (status !== 'granted') {
+                            showFeedback({ type: 'warning', title: 'Permission needed', message: 'Allow photo library access to pick an image.' });
+                            return;
+                        }
+                        const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.8, allowsEditing: true, aspect: [4, 3] });
+                        if (!result.canceled && result.assets[0]) setUpdateImageUri(result.assets[0].uri);
+                    },
+                },
+            ],
+        });
+    }, [showFeedback]);
+
+    // ── Data loading ─────────────────────────────────────────────────────────
     useEffect(() => {
         (async () => {
             try {
@@ -92,8 +121,11 @@ export default function AdminShipmentDetailScreen() {
                     setShipment(data as IShipmentMaster);
                     if (data?.flagged) { setFlagged(true); setSelectedFlag(data.flagReason || null); }
                 }
-            } catch { Alert.alert('Error', 'Could not load shipment.'); }
-            finally { setLoading(false); }
+            } catch {
+                showFeedback({ type: 'error', title: 'Load failed', message: 'Could not load shipment details. Please try again.' });
+            } finally {
+                setLoading(false);
+            }
         })();
     }, [id]);
 
@@ -106,33 +138,56 @@ export default function AdminShipmentDetailScreen() {
         })();
     }, []);
 
-    const handleFlag = useCallback(async (reason: string) => {
+    // ── Flag ─────────────────────────────────────────────────────────────────
+    const handleFlag = useCallback((reason: string) => {
         if (!shipment?._id) return;
         try {
             setFlagged(true);
             setSelectedFlag(reason);
-            Alert.alert('Flagged', `Shipment has been flagged for: ${reason}`);
-        } catch { Alert.alert('Error', 'Failed to flag shipment'); }
-    }, [shipment]);
+            showFeedback({ type: 'success', title: 'Shipment flagged', message: `This shipment has been flagged for: ${reason}.` });
+        } catch {
+            showFeedback({ type: 'error', title: 'Error', message: 'Failed to flag shipment. Please try again.' });
+        }
+    }, [shipment, showFeedback]);
 
+    const openFlagSheet = useCallback(() => {
+        setSheet({
+            visible: true,
+            title: 'Flag Issue',
+            subtitle: 'What is the reason for flagging?',
+            options: FLAG_REASONS.map(r => ({
+                label: r,
+                icon: 'flag-outline',
+                onPress: () => handleFlag(r),
+                danger: true,
+            })),
+        });
+    }, [handleFlag]);
+
+    // ── Status picker ─────────────────────────────────────────────────────────
     const handleStatusOverride = useCallback(() => {
-        if (!shipment?._id || !statuses.length) {
-            Alert.alert('Please Wait', 'Statuses are still loading...');
+        if (!shipment?._id) return;
+        if (!statuses.length) {
+            showFeedback({ type: 'info', title: 'Please wait', message: 'Status options are still loading. Try again in a moment.' });
             return;
         }
-        Alert.alert('Update Status', 'Select the new status:', [
-            ...statuses.map(s => ({
-                text: s.status,
+        setSheet({
+            visible: true,
+            title: 'Update Status',
+            subtitle: 'Select the new status for this shipment',
+            options: statuses.map(s => ({
+                label: s.status,
+                icon: 'swap-horizontal-outline',
                 onPress: () => {
                     setUpdateNotes('');
                     setUpdateLocation('');
                     setUpdateModal({ visible: true, status: s });
                 },
             })),
-            { text: 'Cancel', style: 'cancel' as const },
-        ]);
-    }, [shipment, statuses]);
+        });
+    }, [shipment, statuses, showFeedback]);
 
+    // ── Confirm status update ─────────────────────────────────────────────────
     const handleConfirmStatusUpdate = useCallback(async () => {
         if (!shipment?._id || !updateModal.status) return;
         setUpdating(true);
@@ -150,31 +205,30 @@ export default function AdminShipmentDetailScreen() {
             setShipment(updated as IShipmentMaster);
             setUpdateModal({ visible: false, status: null });
             setUpdateImageUri(null);
-            Alert.alert('Done', `Status updated to ${updateModal.status.status}`, [
-                {
-                    text: 'OK',
-                    onPress: () => router.push('/(tabs)/shipments'),
-                }
-            ]);
+            showFeedback({
+                type: 'success',
+                title: 'Status updated',
+                message: `Shipment status has been changed to ${updateModal.status.status}.`,
+                onConfirm: () => router.push('/(tabs)/shipments'),
+                confirmLabel: 'Back to Shipments',
+            });
         } catch {
-            Alert.alert('Error', 'Failed to update status. Please try again.');
+            showFeedback({ type: 'error', title: 'Update failed', message: 'Could not update the status. Please try again.' });
         } finally {
             setUpdating(false);
         }
-    }, [shipment, updateModal, updateNotes, updateLocation, updateImageUri]);
+    }, [shipment, updateModal, updateNotes, updateLocation, updateImageUri, showFeedback, router]);
 
-    const handleMarkReady = useCallback(async () => {
+    const handleMarkReady = useCallback(() => {
         if (!shipment?._id) return;
         const ready = statuses.find(s => s.status === 'Ready' || s.code === 'READY');
-        if (!ready) {
-            // Fallback: open the status picker so admin can pick whatever is closest
-            handleStatusOverride();
-            return;
-        }
+        if (!ready) { handleStatusOverride(); return; }
         setUpdateNotes('');
         setUpdateLocation('');
         setUpdateModal({ visible: true, status: ready });
     }, [shipment, statuses, handleStatusOverride]);
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     if (loading) return (
         <View className="flex-1 bg-slate-50 items-center justify-center">
@@ -197,7 +251,33 @@ export default function AdminShipmentDetailScreen() {
     return (
         <View className="flex-1 bg-slate-50">
 
-            {/* ── Status Update Modal ── */}
+            {/* ── Feedback Modal ── */}
+            <AppModal
+                visible={feedback.visible}
+                type={feedback.type}
+                title={feedback.title}
+                message={feedback.message}
+                onClose={() => setFeedback(HIDDEN_FEEDBACK)}
+                buttons={
+                    feedback.onConfirm
+                        ? [
+                            { label: feedback.confirmLabel ?? 'OK', onPress: () => { setFeedback(HIDDEN_FEEDBACK); feedback.onConfirm!(); }, variant: 'primary' },
+                            { label: 'Stay here', onPress: () => setFeedback(HIDDEN_FEEDBACK), variant: 'ghost' },
+                          ]
+                        : [{ label: 'OK', onPress: () => setFeedback(HIDDEN_FEEDBACK), variant: 'primary' }]
+                }
+            />
+
+            {/* ── Action Sheet ── */}
+            <ActionSheet
+                visible={sheet.visible}
+                title={sheet.title}
+                subtitle={sheet.subtitle}
+                options={sheet.options}
+                onClose={() => setSheet(HIDDEN_SHEET)}
+            />
+
+            {/* ── Status Update Form (bottom sheet) ── */}
             <Modal
                 visible={updateModal.visible}
                 transparent
@@ -206,12 +286,8 @@ export default function AdminShipmentDetailScreen() {
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={{ flex: 1, justifyContent: 'flex-end' }}>
-                    <TouchableOpacity
-                        style={{ flex: 1 }}
-                        activeOpacity={1}
-                        onPress={() => setUpdateModal({ visible: false, status: null })} />
+                    <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setUpdateModal({ visible: false, status: null })} />
                     <View className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
-                        {/* Handle */}
                         <View className="w-10 h-1 bg-slate-200 rounded-full self-center mb-5" />
                         <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 16 }} className="text-brand-secondary mb-1">
                             Update Status
@@ -226,7 +302,6 @@ export default function AdminShipmentDetailScreen() {
                                 </View>
                             </View>
                         )}
-                        {/* Location */}
                         <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11 }} className="text-slate-400 uppercase tracking-wider mb-1.5">Location</Text>
                         <TextInput
                             value={updateLocation}
@@ -235,7 +310,6 @@ export default function AdminShipmentDetailScreen() {
                             placeholderTextColor="#CBD5E1"
                             style={{ fontFamily: 'Manrope_400Regular', fontSize: 14, borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: '#1e4b69', marginBottom: 14 }}
                         />
-                        {/* Notes */}
                         <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11 }} className="text-slate-400 uppercase tracking-wider mb-1.5">Notes (optional)</Text>
                         <TextInput
                             value={updateNotes}
@@ -246,7 +320,6 @@ export default function AdminShipmentDetailScreen() {
                             numberOfLines={3}
                             style={{ fontFamily: 'Manrope_400Regular', fontSize: 14, borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: '#1e4b69', minHeight: 70, textAlignVertical: 'top', marginBottom: 14 }}
                         />
-                        {/* Photo Attachment */}
                         <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11 }} className="text-slate-400 uppercase tracking-wider mb-1.5">Photo (optional)</Text>
                         {updateImageUri ? (
                             <View className="relative mb-4">
@@ -311,7 +384,6 @@ export default function AdminShipmentDetailScreen() {
 
             {/* ── Compact Header ── */}
             <View className="bg-white border-b border-slate-100 px-5" style={{ paddingTop: 58, paddingBottom: 14 }}>
-                {/* Nav */}
                 <View className="flex-row items-center justify-between mb-4">
                     <TouchableOpacity onPress={() => router.push('/(tabs)/shipments')}
                         className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 items-center justify-center">
@@ -324,7 +396,6 @@ export default function AdminShipmentDetailScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Identity */}
                 <View className="flex-row items-start justify-between">
                     <View className="flex-1 pr-4">
                         <Text style={{ fontFamily: 'Poppins_700Bold', fontSize: 18 }} className="text-brand-secondary" numberOfLines={2}>
@@ -351,8 +422,6 @@ export default function AdminShipmentDetailScreen() {
                             )}
                         </View>
                     </View>
-
-                    {/* Mini stat */}
                     <View className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 items-center">
                         <Text style={{ fontFamily: 'Poppins_700Bold', fontSize: 22 }} className="text-brand-secondary">
                             {shipment.shipments?.length ?? 0}
@@ -361,7 +430,6 @@ export default function AdminShipmentDetailScreen() {
                     </View>
                 </View>
 
-                {/* Arrival chip */}
                 {shipment.scheduleArrival && (
                     <View className="flex-row items-center gap-1.5 mt-3">
                         <Ionicons name="calendar-outline" size={13} color="#94A3B8" />
@@ -373,7 +441,6 @@ export default function AdminShipmentDetailScreen() {
                     </View>
                 )}
 
-                {/* Flag banner */}
                 {flagged && (
                     <View className="mt-3 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 flex-row items-center gap-2">
                         <Ionicons name="flag" size={13} color="#EF4444" />
@@ -385,7 +452,7 @@ export default function AdminShipmentDetailScreen() {
             </View>
 
             {/* ── Tab Bar ── */}
-            <View className="bg-white border-b border-slate-100 flex-row px-5 gap-0">
+            <View className="bg-white border-b border-slate-100 flex-row px-5">
                 {(['details', 'timeline', 'packages'] as Tab[]).map(t => (
                     <TouchableOpacity
                         key={t}
@@ -408,7 +475,6 @@ export default function AdminShipmentDetailScreen() {
             {/* ── Tab Content ── */}
             <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 96 }} showsVerticalScrollIndicator={false}>
 
-                {/* ── Details ── */}
                 {tab === 'details' && (
                     <View className="gap-3">
                         <InfoCard label="Description" value={shipment.description || '—'} icon="document-text-outline" />
@@ -420,7 +486,6 @@ export default function AdminShipmentDetailScreen() {
                     </View>
                 )}
 
-                {/* ── Timeline ── */}
                 {tab === 'timeline' && (
                     <View>
                         {!shipment.timeline?.length ? (
@@ -477,7 +542,6 @@ export default function AdminShipmentDetailScreen() {
                     </View>
                 )}
 
-                {/* ── Packages ── */}
                 {tab === 'packages' && (
                     <View className="gap-2.5">
                         {!shipment.shipments?.length ? (
@@ -512,7 +576,7 @@ export default function AdminShipmentDetailScreen() {
                                             <View className="flex-row items-center gap-1 mt-0.5">
                                                 <Ionicons name="person-outline" size={11} color="#CBD5E1" />
                                                 <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 11 }} className="text-slate-400">
-                                                    {pkg.createdBy.firstname}{pkg.createdBy.lastname}
+                                                    {pkg.createdBy.firstname} {pkg.createdBy.lastname}
                                                 </Text>
                                             </View>
                                         )}
@@ -533,9 +597,7 @@ export default function AdminShipmentDetailScreen() {
                     <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 14 }} className="text-white">Mark Ready</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    onPress={() => Alert.alert('Flag Issue', 'Why are you flagging?',
-                        FLAG_REASONS.map(r => ({ text: r, onPress: () => handleFlag(r) }))
-                    )}
+                    onPress={openFlagSheet}
                     className="bg-slate-50 border border-slate-200 py-3.5 px-5 rounded-xl flex-row items-center gap-2">
                     <Ionicons name="flag-outline" size={17} color="#1e4b69" />
                     <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 14 }} className="text-brand-secondary">Flag</Text>
@@ -545,7 +607,7 @@ export default function AdminShipmentDetailScreen() {
     );
 }
 
-// ─── Micro-components ────────────────────────────────────────────────────────
+// ─── Micro-components ─────────────────────────────────────────────────────────
 
 function InfoCard({ icon, label, value }: { icon: string; label: string; value: string }) {
     return (

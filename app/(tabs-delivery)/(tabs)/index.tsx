@@ -71,8 +71,11 @@ export default function DeliveryPersonHomeScreen() {
         const statusLabel  = item.statusId?.status || 'Pending';
         const cfg          = STATUS_CONFIG[statusLabel] ?? STATUS_CONFIG['Pending'];
         const shipment     = item.shipmentId || {};
+        const deliveredByName = typeof item.deliveredBy === 'object' && item.deliveredBy
+            ? [item.deliveredBy.firstname?.trim(), item.deliveredBy.lastname?.trim()].filter(Boolean).join(' ')
+            : (item.deliveredBy as string | undefined) ?? null;
         const receiverName = [item.receivedBy?.firstname?.trim(), item.receivedBy?.lastname?.trim()]
-            .filter(Boolean).join(' ') || item.deliveredBy || null;
+            .filter(Boolean).join(' ') || deliveredByName || null;
         const address      = item.address || 'Address not provided';
         const date         = item.timestamp ? fmtDate(item.timestamp) : fmtDate(item.createdAt);
         const shipmentType = shipment.shipmentType as string | undefined;

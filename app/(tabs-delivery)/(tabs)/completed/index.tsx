@@ -67,7 +67,10 @@ export default function DeliveryPersonCompletedScreen() {
 
         const receiverFirst = item.receivedBy?.firstname?.trim() || '';
         const receiverLast  = item.receivedBy?.lastname?.trim()  || '';
-        const receiverName  = [receiverFirst, receiverLast].filter(Boolean).join(' ') || item.deliveredBy || null;
+        const deliveredByName = typeof item.deliveredBy === 'object' && item.deliveredBy
+            ? [item.deliveredBy.firstname?.trim(), item.deliveredBy.lastname?.trim()].filter(Boolean).join(' ')
+            : (item.deliveredBy as string | undefined) ?? null;
+        const receiverName  = [receiverFirst, receiverLast].filter(Boolean).join(' ') || deliveredByName || null;
 
         const address     = item.address || '—';
         const date        = item.timestamp ? fmtDate(item.timestamp) : fmtDate(item.createdAt);
