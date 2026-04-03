@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Image, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getDeliveries } from '../../../src/api/delivery';
@@ -62,16 +62,16 @@ export default function AdminDeliveriesScreen() {
         }
     };
 
-    React.useEffect(() => {
+    useFocusEffect(useCallback(() => {
         fetchData();
-    }, []);
+    }, []));
 
     const onRefresh = () => {
         setRefreshing(true);
         fetchData();
     };
 
-        // Real status lives on item.statusId.status, fallback to shipment status
+    // Real status lives on item.statusId.status, fallback to shipment status
     const getStatus = (d: any): string => d.statusId?.status ?? d.shipmentId?.status?.status ?? 'Pending';
 
     const filtered = activeFilter === 'All'

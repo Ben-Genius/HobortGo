@@ -30,9 +30,9 @@ const SCAN_TYPES: { value: ScanType; label: string; icon: string; description: s
     },
     {
         value: 'shipment',
-        label: 'Shipment Batch',
+        label: 'Shipment',
         icon: 'boat-outline',
-        description: 'Update a shipment batch (master) using its tracking code',
+        description: 'Update a shipment received at warehouse (master) using its tracking code',
     },
 ];
 
@@ -338,7 +338,7 @@ export default function AdminScanScreen() {
                 </View>
                 <View style={[styles.bottomOverlay, { alignItems: 'center', paddingTop: 28 }]}>
                     <Text style={{ fontFamily: 'Manrope_600SemiBold', color: 'white', fontSize: 16, marginBottom: 4 }}>
-                        {scanType === 'shipment' ? 'Scan Shipment Batch QR' : 'Scan Delivery QR Code'}
+                        {scanType === 'shipment' ? 'Scan Shipment Received at Warehouse QR' : 'Scan Delivery QR Code'}
                     </Text>
                     <Text style={{ fontFamily: 'Manrope_400Regular', color: 'rgba(255,255,255,0.6)', fontSize: 12, marginBottom: 16 }}>
                         {scanType === 'shipment'

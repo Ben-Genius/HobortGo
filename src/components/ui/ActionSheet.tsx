@@ -1,6 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
-import { Modal, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+
+const MAX_SHEET_HEIGHT = Dimensions.get('window').height * 0.72;
 
 export interface ActionSheetOption {
     label: string;
@@ -29,26 +31,28 @@ export function ActionSheet({ visible, title, subtitle, options, onClose }: Acti
                 {/* Dismiss backdrop */}
                 <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
 
-                <View style={{ backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 12, paddingBottom: 36, paddingHorizontal: 20 }}>
-                    {/* Handle */}
-                    <View style={{ width: 40, height: 4, backgroundColor: '#e2e8f0', borderRadius: 2, alignSelf: 'center', marginBottom: 20 }} />
-
-                    {/* Header */}
-                    <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#1e4b69', marginBottom: subtitle ? 4 : 16 }}>
-                        {title}
-                    </Text>
-                    {subtitle ? (
-                        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>
-                            {subtitle}
+                <View style={{ backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: MAX_SHEET_HEIGHT }}>
+                    {/* Handle + Header — fixed */}
+                    <View style={{ paddingTop: 12, paddingHorizontal: 20 }}>
+                        <View style={{ width: 40, height: 4, backgroundColor: '#e2e8f0', borderRadius: 2, alignSelf: 'center', marginBottom: 20 }} />
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#1e4b69', marginBottom: subtitle ? 4 : 16 }}>
+                            {title}
                         </Text>
-                    ) : null}
+                        {subtitle ? (
+                            <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>
+                                {subtitle}
+                            </Text>
+                        ) : null}
+                    </View>
 
-                    {/* Options */}
-                    <View style={{ gap: 8 }}>
+                    {/* Scrollable options */}
+                    <ScrollView
+                        contentContainerStyle={{ gap: 8, paddingHorizontal: 20, paddingBottom: 4 }}
+                        showsVerticalScrollIndicator={false}>
                         {options.map((opt, i) => (
                             <TouchableOpacity
                                 key={i}
-                                onPress={() => { onClose(); opt.onPress(); }}
+                                onPress={() => { onClose(); setTimeout(opt.onPress, 350); }}
                                 activeOpacity={0.75}
                                 style={{
                                     flexDirection: 'row',
@@ -86,15 +90,17 @@ export function ActionSheet({ visible, title, subtitle, options, onClose }: Acti
                                 ) : null}
                             </TouchableOpacity>
                         ))}
-                    </View>
+                    </ScrollView>
 
-                    {/* Cancel */}
-                    <TouchableOpacity
-                        onPress={onClose}
-                        activeOpacity={0.75}
-                        style={{ marginTop: 12, paddingVertical: 14, borderRadius: 14, alignItems: 'center', backgroundColor: '#f1f5f9' }}>
-                        <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#64748b' }}>Cancel</Text>
-                    </TouchableOpacity>
+                    {/* Cancel — fixed at bottom */}
+                    <View style={{ padding: 20, paddingTop: 12 }}>
+                        <TouchableOpacity
+                            onPress={onClose}
+                            activeOpacity={0.75}
+                            style={{ paddingVertical: 14, borderRadius: 14, alignItems: 'center', backgroundColor: '#f1f5f9' }}>
+                            <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#64748b' }}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
         </Modal>

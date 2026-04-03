@@ -1,8 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Dimensions, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { getShipmentMasterById, updateShipmentMasterStatus } from '../../../src/api/shipmentMaster';
 import { getShipmentStatuses } from '../../../src/api/shipmentStatus';
 import { ActionSheet, ActionSheetOption } from '../../../src/components/ui/ActionSheet';
@@ -14,10 +14,10 @@ const FLAG_REASONS = ['Damaged', 'Missing Item', 'Customs Hold', 'Discrepancy'] 
 const STATUS_MAP: Record<string, { bg: string; color: string }> = {
     'Processing': { bg: '#FEF9C3', color: '#CA8A04' },
     'In-transit': { bg: '#DBEAFE', color: '#2563EB' },
-    'Received':   { bg: '#DCFCE7', color: '#16A34A' },
-    'Accepted':   { bg: '#EDE9FE', color: '#7C3AED' },
-    'Delivered':  { bg: '#DCFCE7', color: '#16A34A' },
-    'PickUp':     { bg: '#FFEDD5', color: '#EA580C' },
+    'Received': { bg: '#DCFCE7', color: '#16A34A' },
+    'Accepted': { bg: '#EDE9FE', color: '#7C3AED' },
+    'Delivered': { bg: '#DCFCE7', color: '#16A34A' },
+    'PickUp': { bg: '#FFEDD5', color: '#EA580C' },
 };
 
 const getStatus = (s: string) => STATUS_MAP[s] ?? { bg: '#F1F5F9', color: '#64748B' };
@@ -66,50 +66,46 @@ export default function AdminShipmentDetailScreen() {
     // Custom modal & action sheet state
     const [feedback, setFeedback] = useState<FeedbackModal>(HIDDEN_FEEDBACK);
     const [sheet, setSheet] = useState<SheetState>(HIDDEN_SHEET);
+    const toastOpacity = useRef(new Animated.Value(0)).current;
+    const showSuccessToast = useCallback(() => {
+        // Wait for the update modal to fully dismiss before showing toast
+        setTimeout(() => {
+            Animated.sequence([
+                Animated.timing(toastOpacity, { toValue: 1, duration: 280, useNativeDriver: true }),
+                Animated.delay(2500),
+                Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+            ]).start();
+        }, 420);
+    }, [toastOpacity]);
+    const [toastLabel, setToastLabel] = useState('');
 
     const showFeedback = useCallback((f: Omit<FeedbackModal, 'visible'>) => {
         setFeedback({ ...f, visible: true });
     }, []);
 
     // ── Image picker ─────────────────────────────────────────────────────────
-    const pickUpdateImage = useCallback(() => {
-        setSheet({
-            visible: true,
-            title: 'Attach Photo',
-            subtitle: 'Choose a source for the photo',
-            options: [
-                {
-                    label: 'Take Photo',
-                    icon: 'camera-outline',
-                    onPress: async () => {
-                        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-                        if (status !== 'granted') {
-                            showFeedback({ type: 'warning', title: 'Permission needed', message: 'Allow camera access to take a photo.' });
-                            return;
-                        }
-                        try {
-                            const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8, allowsEditing: true, aspect: [4, 3] });
-                            if (!result.canceled && result.assets[0]) setUpdateImageUri(result.assets[0].uri);
-                        } catch {
-                            showFeedback({ type: 'error', title: 'Camera unavailable', message: 'Camera is not available on this device.' });
-                        }
-                    },
-                },
-                {
-                    label: 'Choose from Library',
-                    icon: 'image-outline',
-                    onPress: async () => {
-                        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                        if (status !== 'granted') {
-                            showFeedback({ type: 'warning', title: 'Permission needed', message: 'Allow photo library access to pick an image.' });
-                            return;
-                        }
-                        const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.8, allowsEditing: true, aspect: [4, 3] });
-                        if (!result.canceled && result.assets[0]) setUpdateImageUri(result.assets[0].uri);
-                    },
-                },
-            ],
-        });
+    const launchCamera = useCallback(async () => {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            showFeedback({ type: 'warning', title: 'Permission needed', message: 'Allow camera access to take a photo.' });
+            return;
+        }
+        try {
+            const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8, allowsEditing: true, aspect: [4, 3] });
+            if (!result.canceled && result.assets[0]) setUpdateImageUri(result.assets[0].uri);
+        } catch {
+            showFeedback({ type: 'error', title: 'Camera unavailable', message: 'Camera is not available on this device.' });
+        }
+    }, [showFeedback]);
+
+    const launchLibrary = useCallback(async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            showFeedback({ type: 'warning', title: 'Permission needed', message: 'Allow photo library access to pick an image.' });
+            return;
+        }
+        const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.8, allowsEditing: true, aspect: [4, 3] });
+        if (!result.canceled && result.assets[0]) setUpdateImageUri(result.assets[0].uri);
     }, [showFeedback]);
 
     // ── Data loading ─────────────────────────────────────────────────────────
@@ -205,13 +201,8 @@ export default function AdminShipmentDetailScreen() {
             setShipment(updated as IShipmentMaster);
             setUpdateModal({ visible: false, status: null });
             setUpdateImageUri(null);
-            showFeedback({
-                type: 'success',
-                title: 'Status updated',
-                message: `Shipment status has been changed to ${updateModal.status.status}.`,
-                onConfirm: () => router.push('/(tabs)/shipments'),
-                confirmLabel: 'Back to Shipments',
-            });
+            setToastLabel(updateModal.status.status);
+            showSuccessToast();
         } catch {
             showFeedback({ type: 'error', title: 'Update failed', message: 'Could not update the status. Please try again.' });
         } finally {
@@ -263,7 +254,7 @@ export default function AdminShipmentDetailScreen() {
                         ? [
                             { label: feedback.confirmLabel ?? 'OK', onPress: () => { setFeedback(HIDDEN_FEEDBACK); feedback.onConfirm!(); }, variant: 'primary' },
                             { label: 'Stay here', onPress: () => setFeedback(HIDDEN_FEEDBACK), variant: 'ghost' },
-                          ]
+                        ]
                         : [{ label: 'OK', onPress: () => setFeedback(HIDDEN_FEEDBACK), variant: 'primary' }]
                 }
             />
@@ -276,6 +267,22 @@ export default function AdminShipmentDetailScreen() {
                 options={sheet.options}
                 onClose={() => setSheet(HIDDEN_SHEET)}
             />
+
+            {/* ── Success Toast ── */}
+            <Animated.View pointerEvents="none" style={{ position: 'absolute', bottom: 110, left: 20, right: 20, opacity: toastOpacity, zIndex: 99 }}>
+                <View style={{ backgroundColor: '#1a2e3b', borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 10 }}>
+                    <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#16a34a', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="checkmark" size={18} color="white" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: 'white' }}>Status updated</Text>
+                        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 12, color: '#94a3b8', marginTop: 1 }}>
+                            Moved to <Text style={{ fontFamily: 'Manrope_600SemiBold', color: '#4ade80' }}>{toastLabel}</Text>
+                        </Text>
+                    </View>
+                    <Ionicons name="checkmark-done-outline" size={16} color="#4ade80" />
+                </View>
+            </Animated.View>
 
             {/* ── Status Update Form (bottom sheet) ── */}
             <Modal
@@ -322,25 +329,49 @@ export default function AdminShipmentDetailScreen() {
                         />
                         <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11 }} className="text-slate-400 uppercase tracking-wider mb-1.5">Photo (optional)</Text>
                         {updateImageUri ? (
-                            <View className="relative mb-4">
+                            <View style={{ marginBottom: 20, borderRadius: 16, overflow: 'hidden', borderWidth: 1.5, borderColor: '#E2E8F0' }}>
                                 <Image
                                     source={{ uri: updateImageUri }}
-                                    style={{ width: '100%', height: 140, borderRadius: 12 }}
+                                    style={{ width: '100%', height: 180 }}
                                     resizeMode="cover"
                                 />
-                                <TouchableOpacity
-                                    onPress={() => setUpdateImageUri(null)}
-                                    style={{ position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.55)', width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}>
-                                    <Ionicons name="close" size={16} color="white" />
-                                </TouchableOpacity>
+                                {/* overlay bar */}
+                                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.45)', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 10 }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                        <Ionicons name="checkmark-circle" size={15} color="#4ade80" />
+                                        <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 12, color: 'white' }}>Photo attached</Text>
+                                    </View>
+                                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                                        <TouchableOpacity
+                                            onPress={launchCamera}
+                                            style={{ backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                            <Ionicons name="camera-outline" size={13} color="white" />
+                                            <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11, color: 'white' }}>Retake</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => setUpdateImageUri(null)}
+                                            style={{ backgroundColor: 'rgba(239,68,68,0.75)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                            <Ionicons name="trash-outline" size={13} color="white" />
+                                            <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11, color: 'white' }}>Remove</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
                             </View>
                         ) : (
-                            <TouchableOpacity
-                                onPress={pickUpdateImage}
-                                style={{ borderWidth: 1.5, borderColor: '#E2E8F0', borderStyle: 'dashed', borderRadius: 12, paddingVertical: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginBottom: 20 }}>
-                                <Ionicons name="camera-outline" size={20} color="#94A3B8" />
-                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 13, color: '#94A3B8' }}>Attach a photo</Text>
-                            </TouchableOpacity>
+                            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
+                                <TouchableOpacity
+                                    onPress={launchCamera}
+                                    style={{ flex: 1, borderWidth: 1.5, borderColor: '#E2E8F0', borderStyle: 'dashed', borderRadius: 12, paddingVertical: 18, alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                                    <Ionicons name="camera-outline" size={20} color="#94A3B8" />
+                                    <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 12, color: '#94A3B8' }}>Camera</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={launchLibrary}
+                                    style={{ flex: 1, borderWidth: 1.5, borderColor: '#E2E8F0', borderStyle: 'dashed', borderRadius: 12, paddingVertical: 18, alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                                    <Ionicons name="image-outline" size={20} color="#94A3B8" />
+                                    <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 12, color: '#94A3B8' }}>Library</Text>
+                                </TouchableOpacity>
+                            </View>
                         )}
                         <TouchableOpacity
                             onPress={handleConfirmStatusUpdate}

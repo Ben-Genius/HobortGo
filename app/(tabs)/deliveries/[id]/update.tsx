@@ -1,15 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 import { getDeliveryById, getDeliveryStatuses, scanToUpdateDelivery } from '../../../../src/api/delivery';
 import SignaturePad from '../../../../src/components/forms/SignaturePad';
 import { IDType, IDeliveryStatus, ReceiveType } from '../../../../src/types/delivery.types';
 
-const ID_TYPES: IDType[] = ['Passport', 'National ID', "Driver's License", 'Voter ID', 'SSNIT'];
 
 const ACTIONABLE_STATUSES = ['Pending', 'Scheduled', 'In-transit', 'In Transit', 'Out for Delivery'];
 
@@ -54,50 +53,53 @@ export default function AdminDeliveryUpdateScreen() {
     const [submitting, setSubmitting] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+    const toastOpacity = useRef(new Animated.Value(0)).current;
+    const showToast = useCallback(() => {
+        setTimeout(() => {
+            Animated.sequence([
+                Animated.timing(toastOpacity, { toValue: 1, duration: 280, useNativeDriver: true }),
+                Animated.delay(2000),
+                Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+            ]).start(() => router.back());
+        }, 300);
+    }, [toastOpacity, router]);
+
+    const hydrateForm = (dData: any) => {
+        setDelivery(dData);
+        if (dData.statusId?.status) setSelectedStatus(dData.statusId.status);
+        const rb = dData.receivedBy;
+        const fullName = rb ? `${rb.firstname || ''} ${rb.lastname || ''}`.trim() : '';
+        setReceivedBy(fullName);
+        setPhoneNumber(rb?.phoneNumber || dData.phoneNumber || '');
+        setEmail(rb?.email || dData.email || '');
+        setReceiveType(dData.receiveType || 'Self');
+        setIdType((rb?.idType || dData.idType || 'National ID') as IDType);
+        setIdNumber(rb?.idNumber || dData.idNumber || '');
+        setAddress(dData.address || '');
+        setDigitalAddress(dData.digitalAddress || '');
+        setLandmark(dData.landmark || '');
+        setLocation(dData.location || '');
+        setNotes(dData.notes || '');
+    };
+
     useEffect(() => {
+        if (!id) return;
+        setFetchError(null);
+        setErrorMsg(null);
+        setPhotos([]);
+        setSignature('');
+
         const fetchInitialData = async () => {
             setLoading(true);
             setDelivery(null);
-            setFetchError(null);
-            setErrorMsg(null);
-            // Reset form fields
-            setSelectedStatus('');
-            setReceivedBy('');
-            setIdNumber('');
-            setPhoneNumber('');
-            setEmail('');
-            setAddress('');
-            setDigitalAddress('');
-            setLandmark('');
-            setLocation('');
-            setPhotos([]);
-            setSignature('');
-
             try {
                 const [statusRes, deliveryRes] = await Promise.all([
                     getDeliveryStatuses(),
                     getDeliveryById(id as string),
                 ]);
-
                 setStatuses(statusRes?.data || []);
-
                 const dData = deliveryRes?.data ?? deliveryRes;
-                if (dData) {
-                    setDelivery(dData);
-                    if (dData.statusId?.status) setSelectedStatus(dData.statusId.status);
-                    const rb = dData.receivedBy;
-                    const fullName = rb ? `${rb.firstname || ''} ${rb.lastname || ''}`.trim() : '';
-                    setReceivedBy(fullName);
-                    setPhoneNumber(rb?.phoneNumber || dData.phoneNumber || '');
-                    setEmail(rb?.email || dData.email || '');
-                    setReceiveType(dData.receiveType || 'Self');
-                    if (dData.idType) setIdType(dData.idType as IDType);
-                    setIdNumber(dData.idNumber || '');
-                    setAddress(dData.address || '');
-                    setDigitalAddress(dData.digitalAddress || '');
-                    setLandmark(dData.landmark || '');
-                    setLocation(dData.location || '');
-                }
+                if (dData) hydrateForm(dData);
             } catch (error: any) {
                 const raw = error?.response?.data;
                 const msg = raw?.message || (typeof raw === 'string' ? raw : null) || error?.message || 'Could not retrieve delivery details.';
@@ -106,20 +108,20 @@ export default function AdminDeliveryUpdateScreen() {
                 setLoading(false);
             }
         };
-        if (id) fetchInitialData();
+        fetchInitialData();
     }, [id]);
 
     const takePhoto = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert('Permission required', 'Camera access is needed to take photos.');
+            setErrorMsg('Camera access is needed to take photos.');
             return;
         }
         try {
             const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.7, allowsEditing: false });
             if (!result.canceled && result.assets[0]) setPhotos(prev => [...prev, result.assets[0].uri]);
         } catch {
-            Alert.alert('Camera unavailable', 'Cannot access camera. Please use the gallery instead.');
+            setErrorMsg('Camera unavailable. Please use the gallery instead.');
         }
     };
 
@@ -171,9 +173,7 @@ export default function AdminDeliveryUpdateScreen() {
             const trackingCode = delivery?.shipmentId?.trackingId || delivery?.shipmentId?.code;
             await scanToUpdateDelivery(trackingCode, payload);
 
-            Alert.alert('Success!', 'Delivery updated successfully.', [
-                { text: 'Done', onPress: () => router.back() },
-            ]);
+            showToast();
         } catch (error: any) {
             const raw = error?.response?.data?.message;
             const serverMsg = Array.isArray(raw)
@@ -220,6 +220,8 @@ export default function AdminDeliveryUpdateScreen() {
     }
 
     const shipment = delivery.shipmentId || {};
+    const deliveredBy = delivery.deliveredBy;
+    const itemCount = shipment.items?.length ?? 0;
 
     return (
         <SafeAreaView className="flex-1 bg-white">
@@ -235,17 +237,63 @@ export default function AdminDeliveryUpdateScreen() {
             <ScrollView scrollEnabled={scrollEnabled} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
                 <View className="px-5 pb-4">
 
-                    {/* Shipment Banner */}
-                    <View className="bg-brand-orange rounded-lg p-5 overflow-hidden mb-6">
-                        <View className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full" />
-                        <View className="flex-row items-center gap-4">
-                            <View className="bg-white/20 p-3 rounded-lg">
-                                <Ionicons name="cube" size={32} color="white" />
+                    {/* Delivery Context Card */}
+                    <View style={{ backgroundColor: '#1e4b69', borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}>
+                        {/* Decorative circles */}
+                        <View style={{ position: 'absolute', width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(255,255,255,0.05)', top: -40, right: -30 }} />
+                        <View style={{ position: 'absolute', width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.05)', bottom: -20, left: 20 }} />
+
+                        {/* Top row: code + status badge */}
+                        <View style={{ padding: 18, paddingBottom: 14 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10, color: 'rgba(255,255,255,0.55)', letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 3 }}>Shipment Code</Text>
+                                    <Text style={{ fontFamily: 'Poppins_700Bold', fontSize: 22, color: 'white', letterSpacing: 0.5 }}>{shipment.code || shipment.trackingId || '—'}</Text>
+                                </View>
+                                <View style={{ backgroundColor: 'rgba(240,120,45,0.25)', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(240,120,45,0.4)' }}>
+                                    <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 11, color: '#f0782d' }}>{delivery.statusId?.status || 'Pending'}</Text>
+                                </View>
                             </View>
-                            <View className="flex-1">
-                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-white/70 uppercase tracking-widest mb-0.5">Shipment Code</Text>
-                                <Text style={{ fontFamily: 'Poppins_700Bold' }} className="text-white text-2xl">{shipment.trackingId || shipment.code}</Text>
-                                <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 11 }} className="text-white/80">Receiver: {receivedBy || 'N/A'}</Text>
+
+                            {/* Divider */}
+                            <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginBottom: 12 }} />
+
+                            {/* Info grid */}
+                            <View style={{ flexDirection: 'row', gap: 12 }}>
+                                {/* Receiver */}
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 9, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Recipient</Text>
+                                    <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 12, color: 'white' }} numberOfLines={1}>{receivedBy || '—'}</Text>
+                                    {idNumber ? (
+                                        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>{idNumber}</Text>
+                                    ) : null}
+                                </View>
+
+                                {/* Delivery person */}
+                                {deliveredBy ? (
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 9, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Delivery Agent</Text>
+                                        <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 12, color: 'white' }} numberOfLines={1}>{deliveredBy.firstname} {deliveredBy.lastname}</Text>
+                                    </View>
+                                ) : null}
+                            </View>
+                        </View>
+
+                        {/* Bottom pill strip */}
+                        <View style={{ backgroundColor: 'rgba(0,0,0,0.25)', flexDirection: 'row', paddingHorizontal: 18, paddingVertical: 10, gap: 16 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                                <Ionicons name="layers-outline" size={12} color="rgba(255,255,255,0.55)" />
+                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{shipment.shipmentType || 'N/A'}</Text>
+                            </View>
+                            {itemCount > 0 ? (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                                    <Ionicons name="cube-outline" size={12} color="rgba(255,255,255,0.55)" />
+                                    <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{itemCount} item{itemCount !== 1 ? 's' : ''}</Text>
+                                </View>
+                            ) : null}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                                <Ionicons name="swap-horizontal-outline" size={12} color="rgba(255,255,255,0.55)" />
+                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{shipment.status?.status || '—'}</Text>
                             </View>
                         </View>
                     </View>
@@ -295,33 +343,27 @@ export default function AdminDeliveryUpdateScreen() {
                             <View className="flex-1"><LockedField label="Email" value={email} /></View>
                         </View>
 
-                        <View>
-                            <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-400 uppercase tracking-wider mb-1.5">ID Type</Text>
-                            <View className="flex-row gap-2 flex-wrap">
-                                {ID_TYPES.map(type => (
-                                    <View key={type} className={`px-3 py-2 rounded-lg border ${idType === type ? 'bg-brand-secondary/10 border-brand-secondary' : 'bg-slate-50 border-slate-100 opacity-40'}`}>
-                                        <Text style={{ fontSize: 10, color: idType === type ? '#1e4b69' : '#64748b' }}>{type}</Text>
+                        <View className="flex-row gap-4">
+                            <View className="flex-1"><LockedField label="ID Type" value={idType} /></View>
+                            <View className="flex-1">
+                                {idNumber ? (
+                                    <LockedField label="ID Number" value={idNumber} />
+                                ) : (
+                                    <View>
+                                        <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-400 uppercase tracking-wider mb-1.5">ID Number *</Text>
+                                        <TextInput
+                                            className="bg-white rounded-lg px-4 py-3.5 border border-orange-200"
+                                            style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 13, color: '#1e4b69' }}
+                                            placeholder="Enter ID number"
+                                            placeholderTextColor="#94A3B8"
+                                            value={idNumber}
+                                            onChangeText={setIdNumber}
+                                        />
+                                        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 11, color: '#f0782d' }} className="mt-1">Required — not on file</Text>
                                     </View>
-                                ))}
+                                )}
                             </View>
                         </View>
-
-                        {idNumber ? (
-                            <LockedField label="ID Number" value={idNumber} />
-                        ) : (
-                            <View>
-                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-400 uppercase tracking-wider mb-1.5">ID Number *</Text>
-                                <TextInput
-                                    className="bg-white rounded-lg px-4 py-3.5 border border-orange-200"
-                                    style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 13, color: '#1e4b69' }}
-                                    placeholder="Enter ID number"
-                                    placeholderTextColor="#94A3B8"
-                                    value={idNumber}
-                                    onChangeText={setIdNumber}
-                                />
-                                <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 11, color: '#f0782d' }} className="mt-1">Required — not on file</Text>
-                            </View>
-                        )}
                     </View>
 
                     {/* Location — read-only */}
@@ -412,6 +454,22 @@ export default function AdminDeliveryUpdateScreen() {
                     </Text>
                 </TouchableOpacity>
             </View>
+
+            {/* ── Success Toast ── */}
+            <Animated.View pointerEvents="none" style={{ position: 'absolute', bottom: 100, left: 20, right: 20, opacity: toastOpacity, zIndex: 99 }}>
+                <View style={{ backgroundColor: '#1a2e3b', borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 10 }}>
+                    <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#16a34a', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="checkmark" size={18} color="white" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: 'white' }}>Delivery updated</Text>
+                        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 12, color: '#94a3b8', marginTop: 1 }}>
+                            Status set to <Text style={{ fontFamily: 'Manrope_600SemiBold', color: '#4ade80' }}>{selectedStatus}</Text>
+                        </Text>
+                    </View>
+                    <Ionicons name="checkmark-done-outline" size={16} color="#4ade80" />
+                </View>
+            </Animated.View>
         </SafeAreaView>
     );
 }

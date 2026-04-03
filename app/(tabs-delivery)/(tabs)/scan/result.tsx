@@ -1,3 +1,6 @@
+import { getDeliveriesByShipmentId, getDeliveryById, getDeliveryByTrackingCode, getDeliveryStatuses, scanToUpdateDelivery } from '@/src/api/delivery';
+import SignaturePad from '@/src/components/forms/SignaturePad';
+import { IDType, IDeliveryStatus, ReceiveType } from '@/src/types/delivery.types';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -5,9 +8,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
-import { getDeliveriesByShipmentId, getDeliveryById, getDeliveryByTrackingCode, getDeliveryStatuses, scanToUpdateDelivery } from '@/src/api/delivery';
-import SignaturePad from '@/src/components/forms/SignaturePad';
-import { IDType, IDeliveryStatus, ReceiveType } from '@/src/types/delivery.types';
 
 const ID_TYPES: IDType[] = ['Passport', 'National ID', "Driver's License", 'Voter ID', 'SSNIT'];
 

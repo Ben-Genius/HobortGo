@@ -1,10 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getShipmentStatusList } from '../../../src/api/shipment';
 import { getShipmentMasterByTrackingCode, updateShipmentMasterStatusByCode } from '../../../src/api/shipmentMaster';
+import { getShipmentStatuses } from '../../../src/api/shipmentStatus';
 import { IShipmentMaster, IShipmentStatus } from '../../../src/types/shipment.types';
 
 const InfoRow = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
@@ -36,15 +36,28 @@ export default function AdminShipmentMasterResultScreen() {
     const [submitting, setSubmitting] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+    const toastOpacity = useRef(new Animated.Value(0)).current;
+    const showToast = useCallback(() => {
+        setTimeout(() => {
+            Animated.sequence([
+                Animated.timing(toastOpacity, { toValue: 1, duration: 280, useNativeDriver: true }),
+                Animated.delay(2000),
+                Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+            ]).start(() => router.replace('/(tabs)'));
+        }, 300);
+    }, [toastOpacity, router]);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [masterRes, statusRes] = await Promise.all([
                     getShipmentMasterByTrackingCode(trackingCode),
-                    getShipmentStatusList({ offset: 0, limit: 50 }),
+                    getShipmentStatuses({ offset: 0, limit: 50 }),
                 ]);
 
-                const master = (masterRes as any).data ?? masterRes;
+                // Response returns data as an array — take the first item
+                const rawData = (masterRes as any).data ?? masterRes;
+                const master = Array.isArray(rawData) ? rawData[0] : rawData;
                 setShipmentMaster(master);
 
                 const statusList: IShipmentStatus[] = statusRes?.data ?? statusRes ?? [];
@@ -76,17 +89,15 @@ export default function AdminShipmentMasterResultScreen() {
         setSubmitting(true);
         try {
             await updateShipmentMasterStatusByCode({ trackingCode, statusCode: selectedStatusCode });
-            Alert.alert('Success!', 'Shipment status updated successfully.', [
-                { text: 'Done', onPress: () => router.replace('/(tabs)') },
-            ]);
+            showToast();
         } catch (error: any) {
             const raw = error?.response?.data?.message;
             const serverMsg = Array.isArray(raw)
                 ? raw.join(' · ')
                 : raw ||
-                  (typeof error?.response?.data === 'string' ? error.response.data : null) ||
-                  error?.message ||
-                  'Failed to update shipment status.';
+                (typeof error?.response?.data === 'string' ? error.response.data : null) ||
+                error?.message ||
+                'Failed to update shipment status.';
             setErrorMsg(serverMsg);
         } finally {
             setSubmitting(false);
@@ -294,9 +305,8 @@ export default function AdminShipmentMasterResultScreen() {
                     </View>
                 ) : null}
                 <TouchableOpacity
-                    className={`rounded-lg py-4 items-center flex-row justify-center gap-2 ${
-                        submitting || !selectedStatusCode ? 'bg-brand-orange/60' : 'bg-brand-orange'
-                    }`}
+                    className={`rounded-lg py-4 items-center flex-row justify-center gap-2 ${submitting || !selectedStatusCode ? 'bg-brand-orange/60' : 'bg-brand-orange'
+                        }`}
                     onPress={handleSubmit}
                     disabled={submitting || !selectedStatusCode}>
                     {submitting ? (
@@ -309,6 +319,24 @@ export default function AdminShipmentMasterResultScreen() {
                     </Text>
                 </TouchableOpacity>
             </View>
+
+            {/* ── Success Toast ── */}
+            <Animated.View pointerEvents="none" style={{ position: 'absolute', bottom: 100, left: 20, right: 20, opacity: toastOpacity, zIndex: 99 }}>
+                <View style={{ backgroundColor: '#1a2e3b', borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 10 }}>
+                    <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#16a34a', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="checkmark" size={18} color="white" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: 'white' }}>Shipment updated</Text>
+                        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 12, color: '#94a3b8', marginTop: 1 }}>
+                            Status set to <Text style={{ fontFamily: 'Manrope_600SemiBold', color: '#4ade80' }}>
+                                {statuses.find(s => s.code === selectedStatusCode)?.status ?? selectedStatusCode}
+                            </Text>
+                        </Text>
+                    </View>
+                    <Ionicons name="checkmark-done-outline" size={16} color="#4ade80" />
+                </View>
+            </Animated.View>
         </SafeAreaView>
     );
 }
