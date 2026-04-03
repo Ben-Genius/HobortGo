@@ -87,7 +87,14 @@ export default function ScanResultScreen() {
                     }
 
                     const rb = dData.receivedBy;
-                    const fullName = rb ? `${rb.firstname || ''} ${rb.lastname || ''}`.trim() : '';
+                    const cb = dData.shipmentId?.createdBy;
+                    
+                    const rbName = rb ? `${rb.firstname || ''} ${rb.lastname || ''}`.trim() : '';
+                    const cbName = cb ? `${cb.firstname || ''} ${cb.lastname || ''}`.trim() : '';
+                    
+                    // Use receivedBy name if available, otherwise fallback to shipment creator
+                    const fullName = rbName || cbName;
+                    
                     setReceivedBy(fullName);
                     setPhoneNumber(rb?.phoneNumber || dData.phoneNumber || '');
                     setEmail(rb?.email || dData.email || '');

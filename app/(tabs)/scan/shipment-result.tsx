@@ -1,3 +1,4 @@
+import { toast } from '@/src/utils/sonner';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -6,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getShipmentMasterByTrackingCode, updateShipmentMasterStatusByCode } from '../../../src/api/shipmentMaster';
 import { getShipmentStatuses } from '../../../src/api/shipmentStatus';
 import { IShipmentMaster, IShipmentStatus } from '../../../src/types/shipment.types';
-import { toast } from '@/src/utils/sonner';
 
 const InfoRow = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
     <View className="flex-row items-center gap-3 py-3 border-b border-slate-50">
@@ -49,6 +49,7 @@ export default function AdminShipmentMasterResultScreen() {
                 // Response returns data as an array — take the first item
                 const rawData = (masterRes as any).data ?? masterRes;
                 const master = Array.isArray(rawData) ? rawData[0] : rawData;
+                console.log('MASTER', master)
                 setShipmentMaster(master);
 
                 const statusList: IShipmentStatus[] = statusRes?.data ?? statusRes ?? [];

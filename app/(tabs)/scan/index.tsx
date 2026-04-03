@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { toast } from '@/src/utils/sonner';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 
 type ScanMode = 'camera' | 'manual';
 type ScanType = 'delivery' | 'shipment';
@@ -84,8 +85,22 @@ export default function AdminScanScreen() {
     const insets = useSafeAreaInsets();
     const [manualId, setManualId] = useState('');
     const [scanning, setScanning] = useState(true);
+    const isFocused = useIsFocused();
     const router = useRouter();
     const inputRef = useRef<TextInput>(null);
+    const lastScanRef = useRef<string | null>(null);
+
+    React.useEffect(() => {
+        if (!isFocused) {
+            setScanning(false);
+        } else {
+            // When focusing back, wait a moment before enabling scan
+            const timer = setTimeout(() => {
+                setScanning(true);
+            }, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [isFocused]);
 
     const navigate = (trackingCode: string, flow?: string) => {
         if (scanType === 'shipment') {
@@ -129,12 +144,22 @@ export default function AdminScanScreen() {
     };
 
     const handleBarcodeScanned = ({ data }: { data: string }) => {
-        if (!scanning) return;
+        if (!scanning || !isFocused) return;
+        
+        // Prevent scanning the same ID too rapidly (common with QR)
+        if (data === lastScanRef.current) return;
+        lastScanRef.current = data;
+        
         setScanning(false);
         let id = data;
         if (data.includes('hobortgo.com/')) id = data.split('/').pop() ?? data;
         Vibration.vibrate(100);
-        setTimeout(() => setScanning(true), 2000);
+        
+        // Only reset lastScanRef after some time
+        setTimeout(() => {
+            lastScanRef.current = null;
+        }, 3000);
+
         navigate(id);
     };
 
@@ -325,7 +350,7 @@ export default function AdminScanScreen() {
             <CameraView
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
-                onBarcodeScanned={handleBarcodeScanned}
+                onBarcodeScanned={isFocused && scanning ? handleBarcodeScanned : undefined}
             />
 
             {/* Dark overlay with cutout */}

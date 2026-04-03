@@ -29,6 +29,7 @@ export default function DeliveryPersonScanScreen() {
     });
     const router = useRouter();
     const inputRef = useRef<TextInput>(null);
+    const lastScanRef = useRef<string | null>(null);
     const insets = useSafeAreaInsets();
 
     useFocusEffect(
@@ -64,9 +65,20 @@ export default function DeliveryPersonScanScreen() {
 
     const handleBarcodeScanned = ({ data }: { data: string }) => {
         if (!scanning) return;
+        
+        // Prevent scanning the same ID too rapidly (common with QR)
+        if (data === lastScanRef.current) return;
+        lastScanRef.current = data;
+        
         setScanning(false);
         const id = data.includes('hobortgo.com/') ? (data.split('/').pop() ?? data) : data;
         Vibration.vibrate(100);
+        
+        // Only reset lastScanRef after some time
+        setTimeout(() => {
+            lastScanRef.current = null;
+        }, 3000);
+
         navigate(id);
     };
 

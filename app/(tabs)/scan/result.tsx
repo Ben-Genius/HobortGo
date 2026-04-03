@@ -71,6 +71,7 @@ export default function AdminScanResultScreen() {
                 } else if (trackingId) {
                     try {
                         deliveryRes = await getDeliveryByTrackingCode(trackingId);
+
                     } catch (err: any) {
                         if (err?.response?.status === 404) {
                             const fallback = await getDeliveriesByShipmentId(trackingId);
@@ -87,7 +88,14 @@ export default function AdminScanResultScreen() {
                     setDelivery(dData);
                     if (dData.statusId?.status) setSelectedStatus(dData.statusId.status);
                     const rb = dData.receivedBy;
-                    const fullName = rb ? `${rb.firstname || ''} ${rb.lastname || ''}`.trim() : '';
+                    const cb = dData.shipmentId?.createdBy;
+                    
+                    const rbName = rb ? `${rb.firstname || ''} ${rb.lastname || ''}`.trim() : '';
+                    const cbName = cb ? `${cb.firstname || ''} ${cb.lastname || ''}`.trim() : '';
+                    
+                    // Use receivedBy name if available, otherwise fallback to shipment creator
+                    const fullName = rbName || cbName;
+                    
                     setReceivedBy(fullName);
                     setPhoneNumber(rb?.phoneNumber || dData.phoneNumber || '');
                     setEmail(rb?.email || dData.email || '');
