@@ -5,7 +5,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { toast } from '@/src/utils/sonner';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 
@@ -114,7 +115,9 @@ export default function ScanResultScreen() {
     const takePhoto = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert('Permission required', 'Camera access is needed to take photos.');
+            toast.error('Permission required', {
+                description: 'Camera access is needed to take photos.',
+            });
             return;
         }
         try {
@@ -127,7 +130,9 @@ export default function ScanResultScreen() {
                 setPhotos(prev => [...prev, result.assets[0].uri]);
             }
         } catch {
-            Alert.alert('Camera unavailable', 'Cannot access camera. Please use the gallery instead.');
+            toast.error('Camera unavailable', {
+                description: 'Cannot access camera. Please use the gallery instead.',
+            });
         }
     };
 
@@ -191,10 +196,10 @@ export default function ScanResultScreen() {
             };
 
             await scanToUpdateDelivery(delivery.shipmentId?.trackingId || trackingId, payload);
-
-            Alert.alert('Success!', 'Delivery updated successfully.', [
-                { text: 'Done', onPress: () => router.replace('/(tabs-delivery)') },
-            ]);
+            toast.success('Success!', {
+                description: 'Delivery updated successfully.',
+            });
+            setTimeout(() => router.replace('/(tabs-delivery)' as any), 500);
         } catch (error: any) {
             const raw = error?.response?.data?.message;
             const serverMsg = Array.isArray(raw)

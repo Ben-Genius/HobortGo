@@ -2,13 +2,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { Alert, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as z from 'zod';
 import { loginAdmin } from '../../src/api/auth';
 import { CustomInput } from '../../src/components/forms/CustomInput';
 import { ActionButton } from '../../src/components/ui/ActionButton';
 import { useAuthStore } from '../../src/store/authStore';
+import { toast } from '@/src/utils/sonner';
 
 const loginSchema = z.object({
     email: z.string().email('Please enter a valid email address'),
@@ -59,10 +60,9 @@ export default function LoginScreen() {
             }
         } catch (error: any) {
             console.error('Login error:', error);
-            Alert.alert(
-                'Login Failed',
-                error?.response?.data?.message || error.message || 'Invalid credentials'
-            );
+            toast.error('Login Failed', {
+                description: error?.response?.data?.message || error.message || 'Invalid credentials'
+            });
         }
     };
 

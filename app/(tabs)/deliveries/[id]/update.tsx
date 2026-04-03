@@ -1,13 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 import { getDeliveryById, getDeliveryStatuses, scanToUpdateDelivery } from '../../../../src/api/delivery';
 import SignaturePad from '../../../../src/components/forms/SignaturePad';
 import { IDType, IDeliveryStatus, ReceiveType } from '../../../../src/types/delivery.types';
+import { toast } from '@/src/utils/sonner';
 
 
 const ACTIONABLE_STATUSES = ['Pending', 'Scheduled', 'In-transit', 'In Transit', 'Out for Delivery'];
@@ -53,16 +54,6 @@ export default function AdminDeliveryUpdateScreen() {
     const [submitting, setSubmitting] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    const toastOpacity = useRef(new Animated.Value(0)).current;
-    const showToast = useCallback(() => {
-        setTimeout(() => {
-            Animated.sequence([
-                Animated.timing(toastOpacity, { toValue: 1, duration: 280, useNativeDriver: true }),
-                Animated.delay(2000),
-                Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
-            ]).start(() => router.back());
-        }, 300);
-    }, [toastOpacity, router]);
 
     const hydrateForm = (dData: any) => {
         setDelivery(dData);
@@ -172,8 +163,10 @@ export default function AdminDeliveryUpdateScreen() {
 
             const trackingCode = delivery?.shipmentId?.trackingId || delivery?.shipmentId?.code;
             await scanToUpdateDelivery(trackingCode, payload);
-
-            showToast();
+            toast.success('Delivery updated', {
+                description: `Status set to ${selectedStatus}`,
+            });
+            setTimeout(() => router.back(), 500);
         } catch (error: any) {
             const raw = error?.response?.data?.message;
             const serverMsg = Array.isArray(raw)
@@ -455,21 +448,6 @@ export default function AdminDeliveryUpdateScreen() {
                 </TouchableOpacity>
             </View>
 
-            {/* ── Success Toast ── */}
-            <Animated.View pointerEvents="none" style={{ position: 'absolute', bottom: 100, left: 20, right: 20, opacity: toastOpacity, zIndex: 99 }}>
-                <View style={{ backgroundColor: '#1a2e3b', borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 10 }}>
-                    <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#16a34a', alignItems: 'center', justifyContent: 'center' }}>
-                        <Ionicons name="checkmark" size={18} color="white" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 13, color: 'white' }}>Delivery updated</Text>
-                        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 12, color: '#94a3b8', marginTop: 1 }}>
-                            Status set to <Text style={{ fontFamily: 'Manrope_600SemiBold', color: '#4ade80' }}>{selectedStatus}</Text>
-                        </Text>
-                    </View>
-                    <Ionicons name="checkmark-done-outline" size={16} color="#4ade80" />
-                </View>
-            </Animated.View>
         </SafeAreaView>
     );
 }

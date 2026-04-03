@@ -4,7 +4,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
-    Alert,
     Image,
     Keyboard,
     KeyboardAvoidingView,
@@ -16,6 +15,7 @@ import {
     Vibration,
     View,
 } from 'react-native';
+import { toast } from '@/src/utils/sonner';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ScanMode = 'camera' | 'manual';
@@ -112,7 +112,9 @@ export default function AdminScanScreen() {
             const uri = picked.assets[0].uri;
             const results = await scanFromURLAsync(uri, ['qr']);
             if (results.length === 0) {
-                Alert.alert('No QR Found', 'Could not detect a QR code in that image. Make sure the QR fills most of the frame.');
+                toast.warning('No QR Found', {
+                    description: 'Could not detect a QR code in that image. Make sure the QR fills most of the frame.',
+                });
                 return;
             }
             const data = results[0].data;
@@ -120,7 +122,9 @@ export default function AdminScanScreen() {
             if (data.includes('hobortgo.com/')) id = data.split('/').pop() ?? data;
             navigate(id);
         } catch (e: any) {
-            Alert.alert('Error', e?.message ?? 'Could not scan image.');
+            toast.error('Error scanning image', {
+                description: e?.message || 'Could not scan image.',
+            });
         }
     };
 

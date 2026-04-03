@@ -1,9 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Image, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getDeliveries } from '../../../src/api/delivery';
+import { toast } from '@/src/utils/sonner';
 
 const DELIVERY_FILTERS = ['All', 'Pending', 'Scheduled', 'In-transit', 'Delivered', 'Failed'] as const;
 type DeliveryFilter = typeof DELIVERY_FILTERS[number];
@@ -55,7 +56,9 @@ export default function AdminDeliveriesScreen() {
             setDeliveries(response.data);
         } catch (error) {
             console.error('Error fetching deliveries:', error);
-            Alert.alert('Error', 'Failed to fetch deliveries.');
+            toast.error('Fetch Failed', {
+                description: 'Could not retrieve deliveries. Please try again.',
+            });
         } finally {
             setLoading(false);
             setRefreshing(false);
