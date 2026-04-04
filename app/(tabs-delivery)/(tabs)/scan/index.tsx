@@ -41,8 +41,8 @@ export default function DeliveryPersonScanScreen() {
 
     const navigate = (trackingCode: string) => {
         router.push({
-            pathname: '/(tabs-delivery)/scan/result',
-            params: { trackingId: trackingCode, flow: 'delivery' },
+            pathname: '/(tabs-delivery)/scan-result',
+            params: { trackingId: trackingCode },
         } as any);
     };
 

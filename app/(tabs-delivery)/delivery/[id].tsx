@@ -6,6 +6,7 @@ import {
     ActivityIndicator,
     Image,
     Linking,
+    RefreshControl,
     ScrollView,
     Text,
     TouchableOpacity,
@@ -60,23 +61,40 @@ export default function DeliveryDetailScreen() {
     const [delivery, setDelivery] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchData = async () => {
+        if (!id) return;
+        try {
+            const res = await getDeliveryById(id as string);
+            setDelivery(res.data || res);
+        } catch {
+            setError('Failed to load delivery details.');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
 
     useEffect(() => {
         setError(null);
-        if (dataParam) {
-            try { setDelivery(JSON.parse(dataParam)); setLoading(false); return; } catch { /* fall through */ }
+        if (dataParam && !refreshing) {
+            try {
+                const parsed = JSON.parse(dataParam);
+                setDelivery(parsed.data || parsed);
+                setLoading(false);
+                return;
+            } catch { /* fall through */ }
         }
-        if (!id) return;
-        setLoading(true);
-        setDelivery(null);
-        (async () => {
-            try { setDelivery(await getDeliveryById(id as string)); }
-            catch { setError('Failed to load delivery details.'); }
-            finally { setLoading(false); }
-        })();
+        fetchData();
     }, [id, dataParam]);
 
-    if (loading) {
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchData();
+    };
+
+    if (loading && !refreshing) {
         return (
             <SafeAreaView className="flex-1 bg-white items-center justify-center">
                 <ActivityIndicator size="large" color="#F0782D" />
@@ -137,6 +155,14 @@ export default function DeliveryDetailScreen() {
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ padding: 20, paddingBottom: canComplete ? 140 : 100 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#F0782D"
+                        colors={['#F0782D']}
+                    />
+                }
             >
                 {/* Hero card */}
                 <View className="bg-white rounded-xl border border-slate-100 p-5 mb-4">
@@ -267,7 +293,7 @@ export default function DeliveryDetailScreen() {
                     className="bg-brand-orange py-4 rounded-lg flex-row items-center justify-center gap-2"
                     activeOpacity={0.85}
                     onPress={() => router.push({
-                        pathname: '/(tabs-delivery)/scan/result' as any,
+                        pathname: '/(tabs-delivery)/scan-result' as any,
                         params: { deliveryId: id },
                     })}
                 >

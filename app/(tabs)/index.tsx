@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { getDeliveries } from '../../src/api/delivery';
 import { getShipments } from '../../src/api/shipment';
 import { useAuthStore } from '../../src/store/authStore';
@@ -49,35 +49,42 @@ export default function AdminDashboardScreen() {
     const [recentDeliveries, setRecentDeliveries] = React.useState<any[]>([]);
     const [activeDeliveriesCount, setActiveDeliveriesCount] = React.useState(0);
 
+    const [refreshing, setRefreshing] = React.useState(false);
+
+    const fetchDashboardData = async () => {
+        try {
+            const [shipmentData, deliveryData] = await Promise.all([
+                getShipments({ offset: 0, limit: 100 }),
+                getDeliveries({ offset: 0, limit: 5 }),
+            ]);
+
+            const shipments: IShipment[] = shipmentData.data;
+            const newSummary = INITIAL_SUMMARY.map(item => ({
+                ...item,
+                value: shipments.filter(s => s.status?.status === item.statusKey).length
+            }));
+            setSummary(newSummary as any);
+
+            setActiveDeliveriesCount(deliveryData.total || 0);
+            setRecentDeliveries(deliveryData.data || []);
+
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
     React.useEffect(() => {
         if (!token) return;
-
-        const fetchDashboardData = async () => {
-            try {
-                const [shipmentData, deliveryData] = await Promise.all([
-                    getShipments({ offset: 0, limit: 100 }),
-                    getDeliveries({ offset: 0, limit: 5 }),
-                ]);
-
-                const shipments: IShipment[] = shipmentData.data;
-                const newSummary = INITIAL_SUMMARY.map(item => ({
-                    ...item,
-                    value: shipments.filter(s => s.status?.status === item.statusKey).length
-                }));
-                setSummary(newSummary as any);
-
-                setActiveDeliveriesCount(deliveryData.total || 0);
-                setRecentDeliveries(deliveryData.data || []);
-
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchDashboardData();
     }, [token]);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchDashboardData();
+    };
 
     if (loading) {
         return (
@@ -106,7 +113,18 @@ export default function AdminDashboardScreen() {
                     </TouchableOpacity>
                 </View>
             </View>
-            <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
+            <ScrollView
+                className="flex-1 bg-white"
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#F0782D"
+                        colors={['#F0782D']}
+                    />
+                }
+            >
                 <View className="px-5 flex-1 pt-4">
                     {/* Banner */}
                     <View className="bg-brand-orange rounded-lg p-6 mb-8 overflow-hidden">

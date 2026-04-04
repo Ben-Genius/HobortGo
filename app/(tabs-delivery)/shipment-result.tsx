@@ -3,9 +3,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getShipmentStatusList } from '../../../../src/api/shipment';
-import { getShipmentMasterByTrackingCode, updateShipmentMasterStatusByCode } from '../../../../src/api/shipmentMaster';
-import { IShipmentMaster, IShipmentStatus } from '../../../../src/types/shipment.types';
+import { getShipmentStatuses } from '../../src/api/shipmentStatus';
+import { getShipmentMasterByTrackingCode, updateShipmentMasterStatusByCode } from '../../src/api/shipmentMaster';
+import { IShipmentMaster, IShipmentStatus } from '../../src/types/shipment.types';
 
 const InfoRow = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
     <View className="flex-row items-center gap-3 py-3 border-b border-slate-50">
@@ -41,7 +41,8 @@ export default function ShipmentMasterResultScreen() {
                 Animated.timing(toastOpacity, { toValue: 1, duration: 280, useNativeDriver: true }),
                 Animated.delay(2000),
                 Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
-            ]).start(() => router.replace('/(tabs-delivery)'));
+            ]);
+            setTimeout(() => router.replace('/(tabs-delivery)' as any), 500);
         }, 300);
     }, [toastOpacity, router]);
 
@@ -50,7 +51,7 @@ export default function ShipmentMasterResultScreen() {
             try {
                 const [masterRes, statusRes] = await Promise.all([
                     getShipmentMasterByTrackingCode(trackingCode),
-                    getShipmentStatusList({ offset: 0, limit: 50 }),
+                    getShipmentStatuses({ offset: 0, limit: 50 }),
                 ]);
 
                 // Response returns data as an array — take the first item
@@ -139,7 +140,7 @@ export default function ShipmentMasterResultScreen() {
                     onPress={() => router.back()}>
                     <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white">Scan Again</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className="mt-3" onPress={() => router.replace('/(tabs-delivery)')}>
+                <TouchableOpacity className="mt-3" onPress={() => router.replace('/(tabs-delivery)' as any)}>
                     <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 13, color: '#94A3B8' }}>Go to Home</Text>
                 </TouchableOpacity>
             </SafeAreaView>

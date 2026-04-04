@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, RefreshControl, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getShipmentMasters } from '../../../src/api/shipmentMaster';
 import { getShipmentStatuses } from '../../../src/api/shipmentStatus';
@@ -37,26 +37,35 @@ export default function AdminShipmentsScreen() {
     const [masters, setMasters] = useState<IShipmentMaster[]>([]);
     const [statuses, setStatuses] = useState<IShipmentStatus[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [activeFilter, setActiveFilter] = useState<string>('All');
     const [searchText, setSearchText] = useState('');
 
-    useEffect(() => {
+    const fetchData = async () => {
         if (!token) return;
-        (async () => {
-            try {
-                const [mastersRes, statusesRes] = await Promise.all([
-                    getShipmentMasters({ offset: 0, limit: 100 }),
-                    getShipmentStatuses({ offset: 0, limit: 100 }),
-                ]);
-                setMasters(mastersRes.data ?? []);
-                setStatuses(statusesRes.data ?? []);
-            } catch (e) {
-                console.error('Shipments fetch error:', e);
-            } finally {
-                setLoading(false);
-            }
-        })();
+        try {
+            const [mastersRes, statusesRes] = await Promise.all([
+                getShipmentMasters({ offset: 0, limit: 100 }),
+                getShipmentStatuses({ offset: 0, limit: 100 }),
+            ]);
+            setMasters(mastersRes.data ?? []);
+            setStatuses(statusesRes.data ?? []);
+        } catch (e) {
+            console.error('Shipments fetch error:', e);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
     }, [token]);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchData();
+    };
 
     const filterOptions = ['All', ...statuses.map(s => s.status)];
 
@@ -171,7 +180,7 @@ export default function AdminShipmentsScreen() {
                 </View>
 
                 {/* Stat grid — 2×2 */}
-                {loading ? (
+                {loading && !refreshing ? (
                     <View className="items-center justify-center py-6">
                         <ActivityIndicator color="#F0782D" />
                     </View>
@@ -239,7 +248,7 @@ export default function AdminShipmentsScreen() {
             </View>
 
             {/* ── List ── */}
-            {!loading && (
+            {!(loading && !refreshing) && (
                 <View className="flex-row justify-between items-center px-5 mb-2">
                     <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-base">
                         {filtered.length} {activeFilter === 'All' ? 'Shipments' : activeFilter}
@@ -248,13 +257,21 @@ export default function AdminShipmentsScreen() {
             )}
 
             <FlatList
-                data={loading ? [] : filtered}
+                data={loading && !refreshing ? [] : filtered}
                 keyExtractor={item => item._id}
                 renderItem={renderItem}
                 contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 110 }}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#F0782D"
+                        colors={['#F0782D']}
+                    />
+                }
                 ListEmptyComponent={
-                    loading ? null : (
+                    loading && !refreshing ? null : (
                         <View className="items-center mt-16 px-12">
                             <Image
                                 source={require('../../../assets/images/illustrations/shipment_box.webp')}

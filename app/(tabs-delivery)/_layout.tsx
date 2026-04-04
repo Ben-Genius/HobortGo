@@ -18,6 +18,8 @@ export default function DeliveryPersonLayout() {
             <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="delivery/[id]" />
+                <Stack.Screen name="scan-result" />
+                <Stack.Screen name="shipment-result" />
                 <Stack.Screen name="notifications/index" />
             </Stack>
         </RoleGuard>

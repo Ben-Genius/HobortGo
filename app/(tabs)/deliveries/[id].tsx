@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Linking,
+    RefreshControl,
     ScrollView,
     Text,
     TouchableOpacity,
@@ -80,21 +81,29 @@ export default function DeliveryDetailScreen() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchData = async () => {
+        try {
+            const res = await getDeliveryById(id as string);
+            setDelivery(res.data ?? res);
+        } catch {
+            setError(true);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
     useEffect(() => {
-        (async () => {
-            setLoading(true);
-            setDelivery(null);
-            setError(false);
-            try {
-                const res = await getDeliveryById(id as string);
-                setDelivery(res.data ?? res);
-            } catch {
-                setError(true);
-            } finally {
-                setLoading(false);
-            }
-        })();
+        if (!id) return;
+        fetchData();
     }, [id]);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchData();
+    };
 
     if (loading) {
         return (
@@ -188,7 +197,15 @@ export default function DeliveryDetailScreen() {
 
             <ScrollView
                 contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: canUpdate ? 120 : 40 }}
-                showsVerticalScrollIndicator={false}>
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#F0782D"
+                        colors={['#F0782D']}
+                    />
+                }>
 
                 {/* ── Status hero card ── */}
                 <View
@@ -285,19 +302,19 @@ export default function DeliveryDetailScreen() {
             </ScrollView>
 
             {/* ── Sticky Complete Delivery bar ── */}
-            {/* {canUpdate && ( */}
-            <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-5 pt-3 pb-6">
-                <TouchableOpacity
-                    className="bg-brand-orange py-4 rounded-lg flex-row items-center justify-center gap-2"
-                    activeOpacity={0.85}
-                    onPress={() => router.push(`/(tabs)/deliveries/${id}/update` as any)}>
-                    <Ionicons name="checkmark-circle-outline" size={18} color="white" />
-                    <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white text-base">
-                        Update Delivery Status
-                    </Text>
-                </TouchableOpacity>
-            </View>
-            {/* )} */}
+            {canUpdate && (
+                <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-5 pt-3 pb-6">
+                    <TouchableOpacity
+                        className="bg-brand-orange py-4 rounded-lg flex-row items-center justify-center gap-2"
+                        activeOpacity={0.85}
+                        onPress={() => router.push(`/(tabs)/deliveries/${id}/update` as any)}>
+                        <Ionicons name="checkmark-circle-outline" size={18} color="white" />
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white text-base">
+                            Update Delivery Status
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            )}
         </SafeAreaView>
     );
 }

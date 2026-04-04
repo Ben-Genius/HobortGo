@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Dimensions, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, Image, KeyboardAvoidingView, Modal, Platform, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { getShipmentMasterById, updateShipmentMasterStatus } from '../../../src/api/shipmentMaster';
 import { getShipmentStatuses } from '../../../src/api/shipmentStatus';
 import { ActionSheet, ActionSheetOption } from '../../../src/components/ui/ActionSheet';
@@ -109,21 +109,31 @@ export default function AdminShipmentDetailScreen() {
     }, [showFeedback]);
 
     // ── Data loading ─────────────────────────────────────────────────────────
-    useEffect(() => {
-        (async () => {
-            try {
-                if (typeof id === 'string') {
-                    const data: any = await getShipmentMasterById(id);
-                    setShipment(data as IShipmentMaster);
-                    if (data?.flagged) { setFlagged(true); setSelectedFlag(data.flagReason || null); }
-                }
-            } catch {
-                showFeedback({ type: 'error', title: 'Load failed', message: 'Could not load shipment details. Please try again.' });
-            } finally {
-                setLoading(false);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchData = async () => {
+        try {
+            if (typeof id === 'string') {
+                const data: any = await getShipmentMasterById(id);
+                setShipment(data as IShipmentMaster);
+                if (data?.flagged) { setFlagged(true); setSelectedFlag(data.flagReason || null); }
             }
-        })();
+        } catch {
+            showFeedback({ type: 'error', title: 'Load failed', message: 'Could not load shipment details. Please try again.' });
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
     }, [id]);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchData();
+    };
 
     useEffect(() => {
         (async () => {
@@ -504,7 +514,19 @@ export default function AdminShipmentDetailScreen() {
             </View>
 
             {/* ── Tab Content ── */}
-            <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 96 }} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                className="flex-1"
+                contentContainerStyle={{ padding: 16, paddingBottom: 96 }}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#F0782D"
+                        colors={['#F0782D']}
+                    />
+                }
+            >
 
                 {tab === 'details' && (
                     <View className="gap-3">

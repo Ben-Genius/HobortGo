@@ -283,7 +283,7 @@ export default function ScanResultScreen() {
                     onPress={() => router.back()}>
                     <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white">Scan Again</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => router.replace('/(tabs-delivery)')}>
+                <TouchableOpacity onPress={() => router.replace('/(tabs-delivery)' as any)}>
                     <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 13, color: '#94A3B8' }}>Go to Home</Text>
                 </TouchableOpacity>
             </SafeAreaView>
