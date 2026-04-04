@@ -8,6 +8,14 @@ import { getDeliveriesByShipmentId, getDeliveryById, getDeliveryByTrackingCode, 
 import SignaturePad from '../../../src/components/forms/SignaturePad';
 import { IDType, IDeliveryStatus, ReceiveType } from '../../../src/types/delivery.types';
 
+const ID_TYPES: IDType[] = ['passport', 'driving-licence', 'id-card', 'voter-card'];
+const ID_TYPE_LABELS: Record<IDType, string> = {
+    'passport': 'Passport',
+    'driving-licence': "Driver's License",
+    'id-card': 'National ID',
+    'voter-card': 'Voter ID',
+};
+
 const LockedField = ({ label, value }: { label: string; value: string }) => (
     <View>
         <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-400 uppercase tracking-wider mb-1.5">{label}</Text>
@@ -29,8 +37,9 @@ export default function AdminScanResultScreen() {
     const [scrollEnabled, setScrollEnabled] = useState(true);
 
     const [receivedBy, setReceivedBy] = useState('');
+    const [receivedById, setReceivedById] = useState<string | null>(null);
     const [receiveType, setReceiveType] = useState<ReceiveType>('Self');
-    const [idType, setIdType] = useState<IDType>('National ID');
+    const [idType, setIdType] = useState<IDType>('id-card');
     const [idNumber, setIdNumber] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [email, setEmail] = useState('');
@@ -96,11 +105,21 @@ export default function AdminScanResultScreen() {
                     // Use receivedBy name if available, otherwise fallback to shipment creator
                     const fullName = rbName || cbName;
                     
+                    setReceivedById(rb?._id || null);
                     setReceivedBy(fullName);
                     setPhoneNumber(rb?.phoneNumber || dData.phoneNumber || '');
                     setEmail(rb?.email || dData.email || '');
                     setReceiveType(dData.receiveType || 'Self');
-                    setIdType((rb?.idType || dData.idType || 'National ID') as IDType);
+                    // Normalize incoming ID types from backend
+                    const rawIdType = (rb?.idType || dData.idType || 'id-card').toLowerCase();
+                    let normalizedIdType: IDType = 'id-card';
+                    
+                    if (rawIdType.includes('passport')) normalizedIdType = 'passport';
+                    else if (rawIdType.includes('driving') || rawIdType.includes('licence') || rawIdType.includes('license')) normalizedIdType = 'driving-licence';
+                    else if (rawIdType.includes('voter')) normalizedIdType = 'voter-card';
+                    else normalizedIdType = 'id-card';
+
+                    setIdType(normalizedIdType);
                     setIdNumber(rb?.idNumber || dData.idNumber || '');
                     setAddress(dData.address || '');
                     setDigitalAddress(dData.digitalAddress || '');
@@ -165,7 +184,8 @@ export default function AdminScanResultScreen() {
             const payload: any = {
                 status: selectedStatus,
                 receiveType,
-                receivedBy,
+                receivedBy: receivedById || undefined,
+                receiverName: receivedBy,
                 idType,
                 idNumber,
                 phoneNumber,
@@ -183,6 +203,7 @@ export default function AdminScanResultScreen() {
             await scanToUpdateDelivery(trackingCode, payload);
             showToast();
         } catch (error: any) {
+            console.error('Submit error response:', error?.response?.data || error);
             const raw = error?.response?.data?.message;
             const serverMsg = Array.isArray(raw)
                 ? raw.join(' · ')
@@ -348,7 +369,7 @@ export default function AdminScanResultScreen() {
                         </View>
 
                         <View className="flex-row gap-4">
-                            <View className="flex-1"><LockedField label="ID Type" value={idType} /></View>
+                            <View className="flex-1"><LockedField label="ID Type" value={ID_TYPE_LABELS[idType] || idType} /></View>
                             <View className="flex-1">
                                 {idNumber ? (
                                     <LockedField label="ID Number" value={idNumber} />

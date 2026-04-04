@@ -1,3 +1,4 @@
+import { getDeliveryById } from '@/src/api/delivery';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -11,18 +12,17 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getDeliveryById } from '@/src/api/delivery';
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string }> = {
-    'Pending':   { bg: '#fef3c7', text: '#92400e',  dot: '#d97706' },
-    'Scheduled': { bg: '#e6f0f5', text: '#1e4b69',  dot: '#1e4b69' },
-    'Assigned':  { bg: '#e6f0f5', text: '#1e4b69',  dot: '#1e4b69' },
-    'Out':       { bg: '#fff0e6', text: '#f0782d',  dot: '#f0782d' },
-    'Delivered': { bg: '#f0fdf4', text: '#16a34a',  dot: '#16a34a' },
-    'Failed':    { bg: '#fef2f2', text: '#dc2626',  dot: '#dc2626' },
+    'Pending': { bg: '#fef3c7', text: '#92400e', dot: '#d97706' },
+    'Scheduled': { bg: '#e6f0f5', text: '#1e4b69', dot: '#1e4b69' },
+    'Assigned': { bg: '#e6f0f5', text: '#1e4b69', dot: '#1e4b69' },
+    'Out': { bg: '#fff0e6', text: '#f0782d', dot: '#f0782d' },
+    'Delivered': { bg: '#f0fdf4', text: '#16a34a', dot: '#16a34a' },
+    'Failed': { bg: '#fef2f2', text: '#dc2626', dot: '#dc2626' },
 };
 
-const ACTIONABLE = ['Pending', 'Scheduled', 'Assigned', 'Out'];
+const ACTIONABLE = ['Pending', 'Scheduled', 'Assigned', 'Out', 'In Transit'];
 
 const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -58,8 +58,8 @@ export default function DeliveryDetailScreen() {
     const router = useRouter();
 
     const [delivery, setDelivery] = useState<any>(null);
-    const [loading, setLoading]   = useState(true);
-    const [error, setError]       = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         setError(null);
@@ -103,16 +103,16 @@ export default function DeliveryDetailScreen() {
     }
 
     const statusLabel = delivery.statusId?.status || 'Pending';
-    const cfg         = STATUS_CONFIG[statusLabel] ?? STATUS_CONFIG['Pending'];
-    const shipment    = delivery.shipmentId || {};
+    const cfg = STATUS_CONFIG[statusLabel] ?? STATUS_CONFIG['Pending'];
+    const shipment = delivery.shipmentId || {};
     const canComplete = ACTIONABLE.includes(statusLabel);
 
     const receiverName = [delivery.receivedBy?.firstname?.trim(), delivery.receivedBy?.lastname?.trim()]
         .filter(Boolean).join(' ') || null;
-    const phone    = delivery.receivedBy?.phoneNumber || delivery.phoneNumber || null;
-    const email    = delivery.receivedBy?.email       || delivery.email       || null;
-    const photos    = (delivery.media ?? []).filter((m: any) => m.type === 'image');
-    const signature = (delivery.media ?? []).find((m: any)  => m.type === 'signature');
+    const phone = delivery.receivedBy?.phoneNumber || delivery.phoneNumber || null;
+    const email = delivery.receivedBy?.email || delivery.email || null;
+    const photos = (delivery.media ?? []).filter((m: any) => m.type === 'image');
+    const signature = (delivery.media ?? []).find((m: any) => m.type === 'signature');
 
     return (
         <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={['top']}>
@@ -174,18 +174,18 @@ export default function DeliveryDetailScreen() {
                 </View>
 
                 <SectionCard icon="location-outline" title="Address">
-                    <InfoRow label="Address"         value={delivery.address} />
+                    <InfoRow label="Address" value={delivery.address} />
                     <InfoRow label="Digital Address" value={delivery.digitalAddress} />
-                    <InfoRow label="Landmark"        value={delivery.landmark} last={!delivery.location} />
+                    <InfoRow label="Landmark" value={delivery.landmark} last={!delivery.location} />
                     {delivery.location?.includes(',') && <InfoRow label="Coordinates" value={delivery.location} last />}
                 </SectionCard>
 
                 {(receiverName || phone || email || delivery.idType) && (
                     <SectionCard icon="person-outline" title="Receiver">
-                        <InfoRow label="Name"      value={receiverName} />
-                        <InfoRow label="Phone"     value={phone} />
-                        <InfoRow label="Email"     value={email} />
-                        <InfoRow label="ID Type"   value={delivery.idType} />
+                        <InfoRow label="Name" value={receiverName} />
+                        <InfoRow label="Phone" value={phone} />
+                        <InfoRow label="Email" value={email} />
+                        <InfoRow label="ID Type" value={delivery.idType} />
                         <InfoRow label="ID Number" value={delivery.idNumber} last />
                     </SectionCard>
                 )}
@@ -262,19 +262,19 @@ export default function DeliveryDetailScreen() {
                         <Text style={{ fontFamily: 'Manrope_600SemiBold' }} className="text-brand-secondary text-sm">Call</Text>
                     </TouchableOpacity>
                 </View>
-                {canComplete && (
-                    <TouchableOpacity
-                        className="bg-brand-orange py-4 rounded-lg flex-row items-center justify-center gap-2"
-                        activeOpacity={0.85}
-                        onPress={() => router.push({
-                            pathname: '/(tabs-delivery)/scan/result' as any,
-                            params: { deliveryId: id },
-                        })}
-                    >
-                        <Ionicons name="checkmark-circle-outline" size={18} color="white" />
-                        <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white text-base">Complete Delivery</Text>
-                    </TouchableOpacity>
-                )}
+                {/* {canComplete && ( */}
+                <TouchableOpacity
+                    className="bg-brand-orange py-4 rounded-lg flex-row items-center justify-center gap-2"
+                    activeOpacity={0.85}
+                    onPress={() => router.push({
+                        pathname: '/(tabs-delivery)/scan/result' as any,
+                        params: { deliveryId: id },
+                    })}
+                >
+                    <Ionicons name="checkmark-circle-outline" size={18} color="white" />
+                    <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white text-base">Complete Delivery</Text>
+                </TouchableOpacity>
+                {/* )} */}
             </View>
         </SafeAreaView>
     );

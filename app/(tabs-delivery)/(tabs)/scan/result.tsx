@@ -1,16 +1,22 @@
 import { getDeliveriesByShipmentId, getDeliveryById, getDeliveryByTrackingCode, getDeliveryStatuses, scanToUpdateDelivery } from '@/src/api/delivery';
 import SignaturePad from '@/src/components/forms/SignaturePad';
 import { IDType, IDeliveryStatus, ReceiveType } from '@/src/types/delivery.types';
+import { toast } from '@/src/utils/sonner';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { toast } from '@/src/utils/sonner';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 
-const ID_TYPES: IDType[] = ['Passport', 'National ID', "Driver's License", 'Voter ID', 'SSNIT'];
+const ID_TYPES: IDType[] = ['passport', 'driving-licence', 'id-card', 'voter-card'];
+const ID_TYPE_LABELS: Record<IDType, string> = {
+    'passport': 'Passport',
+    'driving-licence': "Driver's License",
+    'id-card': 'National ID',
+    'voter-card': 'Voter ID',
+};
 
 const LockedField = ({ label, value }: { label: string; value: string }) => (
     <View>
@@ -34,8 +40,9 @@ export default function ScanResultScreen() {
 
     // Locked pre-filled fields (from response)
     const [receivedBy, setReceivedBy] = useState('');
+    const [receivedById, setReceivedById] = useState<string | null>(null);
     const [receiveType, setReceiveType] = useState<ReceiveType>('Self');
-    const [idType, setIdType] = useState<IDType>('National ID');
+    const [idType, setIdType] = useState<IDType>('id-card');
     const [idNumber, setIdNumber] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [email, setEmail] = useState('');
@@ -87,21 +94,35 @@ export default function ScanResultScreen() {
                     }
 
                     const rb = dData.receivedBy;
+                    // Support both firstName/lastName (PascalCase from snippet) and firstname/lastname (lowercase)
+                    const firstName = rb?.firstName || rb?.firstname || '';
+                    const lastName = rb?.lastName || rb?.lastname || '';
+                    const rbName = rb ? `${firstName} ${lastName}`.trim() : '';
+
                     const cb = dData.shipmentId?.createdBy;
-                    
-                    const rbName = rb ? `${rb.firstname || ''} ${rb.lastname || ''}`.trim() : '';
-                    const cbName = cb ? `${cb.firstname || ''} ${cb.lastname || ''}`.trim() : '';
-                    
+                    const cbName = cb ? `${cb.firstName || cb.firstname || ''} ${cb.lastName || cb.lastname || ''}`.trim() : '';
+
                     // Use receivedBy name if available, otherwise fallback to shipment creator
                     const fullName = rbName || cbName;
-                    
+
+                    setReceivedById(rb?._id || null);
                     setReceivedBy(fullName);
                     setPhoneNumber(rb?.phoneNumber || dData.phoneNumber || '');
                     setEmail(rb?.email || dData.email || '');
                     setReceiveType(dData.receiveType || 'Self');
-                    if (dData.idType) setIdType(dData.idType as IDType);
-                    setIdNumber(dData.idNumber || '');
 
+                    // Normalize incoming ID types from backend
+                    const rawIdType = (rb?.idType || dData.idType || 'id-card').toLowerCase();
+                    let normalizedIdType: IDType = 'id-card';
+
+                    if (rawIdType.includes('passport')) normalizedIdType = 'passport';
+                    else if (rawIdType.includes('driving') || rawIdType.includes('licence') || rawIdType.includes('license')) normalizedIdType = 'driving-licence';
+                    else if (rawIdType.includes('voter')) normalizedIdType = 'voter-card';
+                    else normalizedIdType = 'id-card';
+
+                    setIdType(normalizedIdType);
+
+                    setIdNumber(rb?.idNumber || dData.idNumber || '');
                     setAddress(dData.address || '');
                     setDigitalAddress(dData.digitalAddress || '');
                     setLandmark(dData.landmark || '');
@@ -186,7 +207,8 @@ export default function ScanResultScreen() {
             const payload: any = {
                 status: selectedStatus,
                 receiveType,
-                receivedBy,
+                receivedBy: receivedById || undefined,
+                receiverName: receivedBy, // Fallback name if backend supports it elsewhere
                 idType,
                 idNumber,
                 phoneNumber,
@@ -202,7 +224,8 @@ export default function ScanResultScreen() {
                 photo: photos.map((p, i) => ({ uri: p, type: 'image/jpeg', name: `photo_${i}.jpg` })),
             };
 
-            await scanToUpdateDelivery(delivery.shipmentId?.trackingId || trackingId, payload);
+            const trackingCode = delivery?.trackingId || delivery?.shipmentId?.trackingId || delivery?.shipmentId?.code || trackingId;
+            await scanToUpdateDelivery(trackingCode, payload);
             toast.success('Success!', {
                 description: 'Delivery updated successfully.',
             });
@@ -215,7 +238,7 @@ export default function ScanResultScreen() {
                 || (typeof error?.response?.data === 'string' ? error.response.data : null)
                 || error?.message
                 || 'Failed to update delivery.';
-            console.error('Submit error response:', JSON.stringify(error?.response?.data));
+            console.error('Submit error response:', error?.response?.data || error);
             setErrorMsg(serverMsg);
         } finally {
             setSubmitting(false);
@@ -282,20 +305,93 @@ export default function ScanResultScreen() {
             <ScrollView scrollEnabled={scrollEnabled} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
                 <View className="px-5 pb-4">
 
-                    {/* Shipment Banner */}
-                    <View className="bg-brand-orange rounded-lg p-5 overflow-hidden mb-6">
-                        <View className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full" />
-                        <View className="flex-row items-center gap-4">
-                            <View className="bg-white/20 p-3 rounded-lg">
-                                <Ionicons name="cube" size={32} color="white" />
+                    {/* Delivery Context Card */}
+                    <View style={{ backgroundColor: '#1e4b69', borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}>
+                        {/* Decorative circles */}
+                        <View style={{ position: 'absolute', width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(255,255,255,0.05)', top: -40, right: -30 }} />
+                        <View style={{ position: 'absolute', width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.05)', bottom: -20, left: 20 }} />
+
+                        {/* Top row: code + status badge */}
+                        <View style={{ padding: 18, paddingBottom: 14 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10, color: 'rgba(255,255,255,0.55)', letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 3 }}>Shipment Code</Text>
+                                    <Text style={{ fontFamily: 'Poppins_700Bold', fontSize: 22, color: 'white', letterSpacing: 0.5 }}>{shipment.code || shipment.trackingId || trackingId || '—'}</Text>
+                                </View>
+                                {delivery.statusId?.status ? (
+                                    <View style={{ backgroundColor: 'rgba(240,120,45,0.25)', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(240,120,45,0.4)' }}>
+                                        <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 11, color: '#f0782d' }}>{delivery.statusId?.status}</Text>
+                                    </View>
+                                ) : null}
                             </View>
-                            <View className="flex-1">
-                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-white/70 uppercase tracking-widest mb-0.5">Shipment Code</Text>
-                                <Text style={{ fontFamily: 'Poppins_700Bold' }} className="text-white text-2xl">{shipment.trackingId || shipment.code}</Text>
-                                <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 11 }} className="text-white/80">Receiver: {receivedBy || 'N/A'}</Text>
+
+                            {/* Divider */}
+                            <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginBottom: 12 }} />
+
+                            {/* Info grid */}
+                            <View style={{ flexDirection: 'row', gap: 12 }}>
+                                {/* Receiver */}
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 9, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Recipient</Text>
+                                    <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 12, color: 'white' }} numberOfLines={1}>{receivedBy || '—'}</Text>
+                                </View>
+
+                                {/* Delivery Agent */}
+                                {delivery.deliveredBy ? (
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 9, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Delivery Agent</Text>
+                                        <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 12, color: 'white' }} numberOfLines={1}>
+                                            {delivery.deliveredBy.firstname || delivery.deliveredBy.firstName} {delivery.deliveredBy.lastname || delivery.deliveredBy.lastName}
+                                        </Text>
+                                    </View>
+                                ) : null}
+                            </View>
+                        </View>
+
+                        {/* Bottom pill strip */}
+                        <View style={{ backgroundColor: 'rgba(0,0,0,0.25)', flexDirection: 'row', paddingHorizontal: 18, paddingVertical: 10, gap: 16 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                                <Ionicons name="layers-outline" size={12} color="rgba(255,255,255,0.55)" />
+                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{shipment.shipmentType || 'N/A'}</Text>
+                            </View>
+                            {shipment.items?.length > 0 ? (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                                    <Ionicons name="cube-outline" size={12} color="rgba(255,255,255,0.55)" />
+                                    <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{shipment.items.length} item{shipment.items.length !== 1 ? 's' : ''}</Text>
+                                </View>
+                            ) : null}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                                <Ionicons name="swap-horizontal-outline" size={12} color="rgba(255,255,255,0.55)" />
+                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{delivery.type || 'Self'}</Text>
                             </View>
                         </View>
                     </View>
+
+                    {/* Shipment Contents */}
+                    {shipment.items && shipment.items.length > 0 && (
+                        <View className="mb-6">
+                            <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-base mb-3">Shipment Contents</Text>
+                            <View className="bg-slate-50 border border-slate-100 rounded-2xl p-4 gap-3">
+                                {shipment.items.map((item: any, idx: number) => (
+                                    <View key={idx} className={`flex-row items-center justify-between ${idx !== shipment.items.length - 1 ? 'border-b border-slate-200/50 pb-3' : ''}`}>
+                                        <View className="flex-1 pr-4">
+                                            <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 13 }} className="text-brand-secondary mb-0.5">{item.name}</Text>
+                                            <View className="flex-row items-center gap-2">
+                                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11 }} className="text-slate-500">Qty: {item.quantity}</Text>
+                                                <View className="w-1 h-1 rounded-full bg-slate-300" />
+                                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11 }} className="text-slate-500">{item.weight}kg</Text>
+                                            </View>
+                                        </View>
+                                        {item.trackingCode && (
+                                            <View className="bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                                                <Text style={{ fontFamily: 'Manrope_700Bold', fontSize: 10 }} className="text-brand-orange uppercase">{item.trackingCode}</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
+                    )}
 
                     {/* Status */}
                     <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-base mb-3">Update Status</Text>
@@ -341,6 +437,7 @@ export default function ScanResultScreen() {
                         </View>
 
                         <LockedField label="Full Name" value={receivedBy} />
+                        {/* <LockedField label="ID Type" value={ID_TYPE_LABELS[idType] || idType} /> */}
 
                         <View className="flex-row gap-4">
                             <View className="flex-1">
@@ -359,7 +456,7 @@ export default function ScanResultScreen() {
                                         key={type}
                                         className={`px-3 py-2 rounded-lg border ${idType === type ? 'bg-brand-secondary/10 border-brand-secondary' : 'bg-slate-50 border-slate-100 opacity-40'}`}
                                     >
-                                        <Text style={{ fontSize: 10, color: idType === type ? '#1e4b69' : '#64748b' }}>{type}</Text>
+                                        <Text style={{ fontSize: 10, color: idType === type ? '#1e4b69' : '#64748b' }}>{ID_TYPE_LABELS[type]}</Text>
                                     </View>
                                 ))}
                             </View>

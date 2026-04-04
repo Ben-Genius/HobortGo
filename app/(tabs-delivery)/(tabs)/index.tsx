@@ -145,7 +145,7 @@ export default function DeliveryPersonHomeScreen() {
                         <View>
                             <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-400 text-xs uppercase tracking-widest">Courier Pro</Text>
                             <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-xl mt-0.5">
-                                Hi, <Text className="text-brand-orange">{user?.name?.split(' ')[0] ?? 'Driver'}</Text>
+                                Hi, <Text className="text-brand-orange">{user?.firstname ?? user?.name?.split(' ')[0] ?? 'Driver'}</Text>
                             </Text>
                         </View>
                         <TouchableOpacity

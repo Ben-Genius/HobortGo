@@ -44,6 +44,9 @@ export default function LoginScreen() {
                 const user: import('../../src/types/user.types').IAdminUser = {
                     id: payload.sub,
                     email: payload.email,
+                    firstname: response.firstname,
+                    lastname: response.lastname,
+                    name: `${response.firstname} ${response.lastname}`,
                     role: payload.roles as import('../../src/types/user.types').UserRole,
                 };
 

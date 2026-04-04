@@ -59,11 +59,15 @@ export default function DeliverySettingsScreen() {
     const router = useRouter();
     const { user, role, logout } = useAuthStore();
 
-    const initials = user?.name
-        ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-        : user?.email?.charAt(0).toUpperCase() ?? 'D';
+    const initials = user?.firstname && user?.lastname
+        ? `${user.firstname[0]}${user.lastname[0]}`.toUpperCase()
+        : user?.name
+            ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+            : user?.email?.charAt(0).toUpperCase() ?? 'D';
 
-    const displayName = user?.name ?? user?.email ?? 'Driver';
+    const displayName = user?.firstname && user?.lastname
+        ? `${user.firstname} ${user.lastname}`
+        : user?.name ?? user?.email ?? 'Driver';
     const displayRole = role === 'delivery_person' ? 'Delivery Personnel' : role === 'staff' ? 'Staff / Driver' : 'Driver';
 
     const handleLogout = () => {

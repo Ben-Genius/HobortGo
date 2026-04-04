@@ -285,19 +285,19 @@ export default function DeliveryDetailScreen() {
             </ScrollView>
 
             {/* ── Sticky Complete Delivery bar ── */}
-            {canUpdate && (
-                <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-5 pt-3 pb-6">
-                    <TouchableOpacity
-                        className="bg-brand-orange py-4 rounded-lg flex-row items-center justify-center gap-2"
-                        activeOpacity={0.85}
-                        onPress={() => router.push(`/(tabs)/deliveries/${id}/update` as any)}>
-                        <Ionicons name="checkmark-circle-outline" size={18} color="white" />
-                        <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white text-base">
-                            Update Delivery Status
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-            )}
+            {/* {canUpdate && ( */}
+            <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-5 pt-3 pb-6">
+                <TouchableOpacity
+                    className="bg-brand-orange py-4 rounded-lg flex-row items-center justify-center gap-2"
+                    activeOpacity={0.85}
+                    onPress={() => router.push(`/(tabs)/deliveries/${id}/update` as any)}>
+                    <Ionicons name="checkmark-circle-outline" size={18} color="white" />
+                    <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-white text-base">
+                        Update Delivery Status
+                    </Text>
+                </TouchableOpacity>
+            </View>
+            {/* )} */}
         </SafeAreaView>
     );
 }

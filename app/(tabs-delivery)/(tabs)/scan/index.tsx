@@ -1,3 +1,4 @@
+import { AppModal } from '@/src/components/ui/AppModal';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { CameraView, scanFromURLAsync, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -15,7 +16,6 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AppModal } from '@/src/components/ui/AppModal';
 
 type ScanMode = 'camera' | 'manual';
 
@@ -65,15 +65,15 @@ export default function DeliveryPersonScanScreen() {
 
     const handleBarcodeScanned = ({ data }: { data: string }) => {
         if (!scanning) return;
-        
+
         // Prevent scanning the same ID too rapidly (common with QR)
         if (data === lastScanRef.current) return;
         lastScanRef.current = data;
-        
+
         setScanning(false);
         const id = data.includes('hobortgo.com/') ? (data.split('/').pop() ?? data) : data;
         Vibration.vibrate(100);
-        
+
         // Only reset lastScanRef after some time
         setTimeout(() => {
             lastScanRef.current = null;
@@ -281,8 +281,8 @@ const styles = StyleSheet.create({
     sideOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)' },
     cutout: { width: 260, backgroundColor: 'transparent', position: 'relative' },
     corner: { position: 'absolute', width: 40, height: 40, borderColor: '#f0782d' },
-    topLeft:     { top: 0,    left: 0,  borderTopWidth: 4,    borderLeftWidth: 4,  borderTopLeftRadius: 6 },
-    topRight:    { top: 0,    right: 0, borderTopWidth: 4,    borderRightWidth: 4, borderTopRightRadius: 6 },
-    bottomLeft:  { bottom: 0, left: 0,  borderBottomWidth: 4, borderLeftWidth: 4,  borderBottomLeftRadius: 6 },
+    topLeft: { top: 0, left: 0, borderTopWidth: 4, borderLeftWidth: 4, borderTopLeftRadius: 6 },
+    topRight: { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: 6 },
+    bottomLeft: { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: 6 },
     bottomRight: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 6 },
 });
