@@ -1,3 +1,4 @@
+import { useTheme } from '@/hooks/use-theme';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -6,7 +7,6 @@ import { getDeliveries } from '../../src/api/delivery';
 import { getShipments } from '../../src/api/shipment';
 import { useAuthStore } from '../../src/store/authStore';
 import { IShipment } from '../../src/types/shipment.types';
-import { useTheme } from '@/hooks/use-theme';
 
 const INITIAL_SUMMARY = [
     { label: 'Pending', value: 0, icon: 'time', color: '#f0782d', bg: '#fff0e6', statusKey: 'Pending' },
@@ -104,8 +104,10 @@ export default function AdminDashboardScreen() {
                 <View className="flex-row justify-between items-center">
                     <View>
                         <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-400 text-xs uppercase tracking-widest">Dashboard</Text>
-                        <Text style={{ fontFamily: 'Poppins_600' }} className="text-brand-secondary text-lg mt-1">
-                            Hello, <Text className="text-brand-orange">{user?.name?.split(' ')[0] ?? 'Admin'}</Text>
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary dark:text-white text-lg mt-1">
+                            Hello, <Text className="text-brand-orange">
+                                {user?.firstname && user.firstname !== 'undefined' ? user.firstname : (user?.email ? (user.email.split('@')[0].includes('.') ? user.email.split('@')[0].split('.')[0].charAt(0).toUpperCase() + user.email.split('@')[0].split('.')[0].slice(1) : user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1)) : 'Admin')}
+                            </Text>
                         </Text>
                     </View>
                     <TouchableOpacity

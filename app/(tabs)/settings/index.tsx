@@ -1,11 +1,11 @@
+import { ActionSheet } from '@/src/components/ui/ActionSheet';
+import { useAuthStore } from '@/src/store/authStore';
+import { ThemePreference, useSettingsStore } from '@/src/store/settingsStore';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuthStore } from '@/src/store/authStore';
-import { ActionSheet } from '@/src/components/ui/ActionSheet';
-import { ThemePreference, useSettingsStore } from '@/src/store/settingsStore';
 
 type SettingsRowProps = {
     icon: keyof typeof Ionicons.glyphMap;
@@ -69,11 +69,40 @@ export default function AdminSettingsScreen() {
     const { themePreference, setThemePreference } = useSettingsStore();
     const [appearanceSheetVisible, setAppearanceSheetVisible] = useState(false);
 
-    const initials = user?.name
-        ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-        : user?.email?.charAt(0).toUpperCase() ?? 'A';
+    const getDisplayName = () => {
+        // Robust check for 'undefined' string which can happen if backend response is joined incorrectly
+        const isValid = (val: any) => val && val !== 'undefined' && val !== 'undefined undefined';
 
-    const displayName = user?.name ?? user?.email ?? 'Admin';
+        if (user && isValid(user.firstname)) return user.firstname!;
+        if (user && isValid(user.name)) return user.name!;
+        
+        const email = user?.email;
+        if (email && email !== 'undefined') {
+            const part = email.split('@')[0];
+            const namePart = part.includes('.') ? part.split('.')[0] : part;
+            return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+        }
+        return 'Admin';
+    };
+
+    const getInitials = () => {
+        const isValid = (val: any) => val && val !== 'undefined' && val !== 'undefined undefined';
+        
+        if (isValid(user?.name)) {
+            const parts = user!.name!.split(' ').filter(p => p !== 'undefined');
+            if (parts.length > 0) {
+                return parts.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+            }
+        }
+        if (isValid(user?.firstname) && isValid(user?.lastname)) {
+            return (user!.firstname![0] + user!.lastname![0]).toUpperCase();
+        }
+        const name = getDisplayName();
+        return name ? name.charAt(0).toUpperCase() : 'A';
+    };
+
+    const displayName = getDisplayName() || 'Admin';
+    const initials = getInitials();
     const displayRole = role === 'super_admin' ? 'Super Admin' : 'Admin';
 
     const handleLogout = () => {
