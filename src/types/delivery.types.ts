@@ -1,6 +1,6 @@
 export type ReceiveType = 'Self' | 'VerifiedPerson' | 'Other';
 export type DeliveryType = 'Delivery' | 'Pickup';
-export type IDType = 'Passport' | 'National ID' | "Driver's License" | 'Voter ID' | 'SSNIT';
+export type IDType = 'Passport' | 'National ID' | "Driver's License" | 'Voter ID' | 'SSNIT' | 'voter-card';
 
 export interface IDeliveryStatus {
     _id: string;

@@ -1,3 +1,4 @@
+import { toast } from '@/src/utils/sonner';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -8,7 +9,6 @@ import { captureRef } from 'react-native-view-shot';
 import { getDeliveryById, getDeliveryStatuses, scanToUpdateDelivery } from '../../../../src/api/delivery';
 import SignaturePad from '../../../../src/components/forms/SignaturePad';
 import { IDType, IDeliveryStatus, ReceiveType } from '../../../../src/types/delivery.types';
-import { toast } from '@/src/utils/sonner';
 
 
 const ACTIONABLE_STATUSES = ['Pending', 'Scheduled', 'In-transit', 'In Transit', 'Out for Delivery'];
@@ -26,6 +26,8 @@ const LockedField = ({ label, value }: { label: string; value: string }) => (
 export default function AdminDeliveryUpdateScreen() {
     // `id` comes from the URL segment deliveries/[id]/update
     const { id } = useLocalSearchParams<{ id: string }>();
+
+    console.log("ID", id);
     const router = useRouter();
 
     const [delivery, setDelivery] = useState<any>(null);
@@ -59,12 +61,22 @@ export default function AdminDeliveryUpdateScreen() {
         setDelivery(dData);
         if (dData.statusId?.status) setSelectedStatus(dData.statusId.status);
         const rb = dData.receivedBy;
-        const fullName = rb ? `${rb.firstname || ''} ${rb.lastname || ''}`.trim() : '';
+        // Support both firstName/lastName (PascalCase from snippet) and firstname/lastname (lowercase)
+        const firstName = rb?.firstName || rb?.firstname || '';
+        const lastName = rb?.lastName || rb?.lastname || '';
+        const fullName = rb ? `${firstName} ${lastName}`.trim() : '';
+
         setReceivedBy(fullName);
         setPhoneNumber(rb?.phoneNumber || dData.phoneNumber || '');
         setEmail(rb?.email || dData.email || '');
         setReceiveType(dData.receiveType || 'Self');
-        setIdType((rb?.idType || dData.idType || 'National ID') as IDType);
+
+        // Normalize voter-card to Voter ID for the UI if needed
+        const rawIdType = rb?.idType || dData.idType || 'National ID';
+        let normalizedIdType = rawIdType;
+        if (rawIdType === 'voter-card') normalizedIdType = 'Voter ID';
+        setIdType(normalizedIdType as IDType);
+
         setIdNumber(rb?.idNumber || dData.idNumber || '');
         setAddress(dData.address || '');
         setDigitalAddress(dData.digitalAddress || '');
@@ -161,7 +173,7 @@ export default function AdminDeliveryUpdateScreen() {
                 photo: photos.map((p, i) => ({ uri: p, type: 'image/jpeg', name: `photo_${i}.jpg` })),
             };
 
-            const trackingCode = delivery?.shipmentId?.trackingId || delivery?.shipmentId?.code;
+            const trackingCode = delivery?.trackingId || delivery?.shipmentId?.trackingId || delivery?.shipmentId?.code;
             await scanToUpdateDelivery(trackingCode, payload);
             toast.success('Delivery updated', {
                 description: `Status set to ${selectedStatus}`,
@@ -290,6 +302,32 @@ export default function AdminDeliveryUpdateScreen() {
                             </View>
                         </View>
                     </View>
+
+                    {/* Items Summary */}
+                    {shipment.items && shipment.items.length > 0 && (
+                        <View className="mb-6">
+                            <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-base mb-3">Shipment Contents</Text>
+                            <View className="bg-slate-50 border border-slate-100 rounded-2xl p-4 gap-3">
+                                {shipment.items.map((item: any, idx: number) => (
+                                    <View key={idx} className={`flex-row items-center justify-between ${idx !== shipment.items.length - 1 ? 'border-b border-slate-200/50 pb-3' : ''}`}>
+                                        <View className="flex-1 pr-4">
+                                            <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 13 }} className="text-brand-secondary mb-0.5">{item.name}</Text>
+                                            <View className="flex-row items-center gap-2">
+                                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11 }} className="text-slate-500">Qty: {item.quantity}</Text>
+                                                <View className="w-1 h-1 rounded-full bg-slate-300" />
+                                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 11 }} className="text-slate-500">{item.weight}kg</Text>
+                                            </View>
+                                        </View>
+                                        {item.trackingCode && (
+                                            <View className="bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                                                <Text style={{ fontFamily: 'Manrope_700Bold', fontSize: 10 }} className="text-brand-orange uppercase">{item.trackingCode}</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
+                    )}
 
                     {/* Status */}
                     <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-base mb-3">Update Status</Text>

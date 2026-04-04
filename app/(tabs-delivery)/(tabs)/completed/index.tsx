@@ -11,19 +11,18 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getDeliveries } from '../../../../src/api/delivery';
-import { getDeliveryStatuses } from '../../../../src/api/delivery';
+import { getDeliveries, getDeliveryStatuses } from '../../../../src/api/delivery';
 
 // ─── Status colour map ────────────────────────────────────────────────────────
 const STATUS_COLOR: Record<string, { bg: string; text: string; dot: string; icon: string }> = {
-    'Pending':   { bg: '#fef3c7', text: '#92400e', dot: '#d97706', icon: 'time-outline' },
+    'Pending': { bg: '#fef3c7', text: '#92400e', dot: '#d97706', icon: 'time-outline' },
     'Scheduled': { bg: '#e6f0f5', text: '#1e4b69', dot: '#1e4b69', icon: 'calendar-outline' },
-    'Assigned':  { bg: '#ede9fe', text: '#7c3aed', dot: '#7c3aed', icon: 'person-add-outline' },
-    'Out':       { bg: '#fff0e6', text: '#f0782d', dot: '#f0782d', icon: 'bicycle-outline' },
-    'In Transit':{ bg: '#fff0e6', text: '#f0782d', dot: '#f0782d', icon: 'bicycle-outline' },
+    'Assigned': { bg: '#ede9fe', text: '#7c3aed', dot: '#7c3aed', icon: 'person-add-outline' },
+    'Out': { bg: '#fff0e6', text: '#f0782d', dot: '#f0782d', icon: 'bicycle-outline' },
+    'In Transit': { bg: '#fff0e6', text: '#f0782d', dot: '#f0782d', icon: 'bicycle-outline' },
     'Delivered': { bg: '#f0fdf4', text: '#16a34a', dot: '#16a34a', icon: 'checkmark-circle-outline' },
-    'Failed':    { bg: '#fef2f2', text: '#dc2626', dot: '#dc2626', icon: 'close-circle-outline' },
-    'Confiscated':{ bg: '#fee2e2', text: '#dc2626', dot: '#dc2626', icon: 'alert-circle-outline' },
+    'Failed': { bg: '#fef2f2', text: '#dc2626', dot: '#dc2626', icon: 'close-circle-outline' },
+    'Confiscated': { bg: '#fee2e2', text: '#dc2626', dot: '#dc2626', icon: 'alert-circle-outline' },
 };
 
 function getCfg(status: string) {
@@ -65,15 +64,10 @@ function DeliveryCard({ item, onPress }: { item: any; onPress: () => void }) {
                 backgroundColor: 'white',
                 borderRadius: 16,
                 marginBottom: 12,
-                shadowColor: '#000',
-                shadowOpacity: 0.05,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 3 },
-                elevation: 2,
+
                 overflow: 'hidden',
             }}>
             {/* Status accent strip */}
-            <View style={{ height: 3, backgroundColor: cfg.dot }} />
 
             <View style={{ padding: 16 }}>
                 {/* Row 1 — code + status badge */}
@@ -170,10 +164,10 @@ function DeliveryCard({ item, onPress }: { item: any; onPress: () => void }) {
 export default function DeliveryPersonCompletedScreen() {
     const router = useRouter();
     const [deliveries, setDeliveries] = useState<any[]>([]);
-    const [statuses, setStatuses]     = useState<any[]>([]);
-    const [loading, setLoading]       = useState(true);
+    const [statuses, setStatuses] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [filter, setFilter]         = useState<string>('All');
+    const [filter, setFilter] = useState<string>('All');
 
     const fetchData = async () => {
         try {
@@ -251,7 +245,7 @@ export default function DeliveryPersonCompletedScreen() {
                                     paddingVertical: 12,
                                     minWidth: 88,
                                     alignItems: 'center',
-                                    borderWidth: 1.5,
+                                    borderWidth: 0.5,
                                     borderColor: (filter === s.label || (filter === 'All' && s.label === 'Total'))
                                         ? s.dot
                                         : 'transparent',
@@ -282,7 +276,7 @@ export default function DeliveryPersonCompletedScreen() {
                                 paddingVertical: 7,
                                 borderRadius: 20,
                                 backgroundColor: filter === item ? '#1e4b69' : 'white',
-                                borderWidth: 1,
+                                borderWidth: 0.5,
                                 borderColor: filter === item ? '#1e4b69' : '#e2e8f0',
                             }}>
                             <Text style={{
