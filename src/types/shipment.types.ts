@@ -82,3 +82,41 @@ export interface IShipmentStatusPayload {
     description: string;
     isVisible: boolean;
 }
+
+// ─── Scan / Tracking-code lookup response ────────────────────────────────────
+
+export interface IPackageItemDimension {
+    width: number;
+    length: number;
+    height: number;
+}
+
+export interface IPackageItem {
+    name: string;
+    quantity: number;
+    weight: number;
+    price: number;
+    trackingCode: string;
+    description: string;
+    dimension: IPackageItemDimension;
+}
+
+export interface IScannedShipment {
+    _id: string;
+    code: string;
+    country: string;
+    shipmentType: ShipmentType;
+    destinationAddress: string;
+    delivery: string;
+    status: IShipmentStatus;
+    items: IPackageItem[];
+    businessItems: any[];
+    createdBy: {
+        _id: string;
+        code: string;
+        firstname: string;
+        lastname: string;
+        id: string;
+    };
+    id: string;
+}

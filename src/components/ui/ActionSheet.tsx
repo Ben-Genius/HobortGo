@@ -2,6 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import { Dimensions, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
+import { useTheme } from '@/hooks/use-theme';
+
 const MAX_SHEET_HEIGHT = Dimensions.get('window').height * 0.72;
 
 export interface ActionSheetOption {
@@ -20,6 +22,8 @@ interface ActionSheetProps {
 }
 
 export function ActionSheet({ visible, title, subtitle, options, onClose }: ActionSheetProps) {
+    const { colors } = useTheme();
+
     return (
         <Modal
             visible={visible}
@@ -31,15 +35,15 @@ export function ActionSheet({ visible, title, subtitle, options, onClose }: Acti
                 {/* Dismiss backdrop */}
                 <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
 
-                <View style={{ backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: MAX_SHEET_HEIGHT }}>
+                <View style={{ backgroundColor: colors.sheet, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: MAX_SHEET_HEIGHT }}>
                     {/* Handle + Header — fixed */}
                     <View style={{ paddingTop: 12, paddingHorizontal: 20 }}>
-                        <View style={{ width: 40, height: 4, backgroundColor: '#e2e8f0', borderRadius: 2, alignSelf: 'center', marginBottom: 20 }} />
-                        <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#1e4b69', marginBottom: subtitle ? 4 : 16 }}>
+                        <View style={{ width: 40, height: 4, backgroundColor: colors.sheetHandle, borderRadius: 2, alignSelf: 'center', marginBottom: 20 }} />
+                        <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: colors.text, marginBottom: subtitle ? 4 : 16 }}>
                             {title}
                         </Text>
                         {subtitle ? (
-                            <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>
+                            <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 13, color: colors.subtleText, marginBottom: 16 }}>
                                 {subtitle}
                             </Text>
                         ) : null}
@@ -59,10 +63,10 @@ export function ActionSheet({ visible, title, subtitle, options, onClose }: Acti
                                     alignItems: 'center',
                                     paddingVertical: 14,
                                     paddingHorizontal: 16,
-                                    backgroundColor: opt.danger ? '#fff5f5' : '#f8fafc',
+                                    backgroundColor: opt.danger ? colors.dangerBg : colors.optionBg,
                                     borderRadius: 14,
                                     borderWidth: 1,
-                                    borderColor: opt.danger ? '#fee2e2' : '#f1f5f9',
+                                    borderColor: opt.danger ? colors.dangerBorder : colors.optionBorder,
                                     gap: 14,
                                 }}>
                                 {opt.icon ? (
@@ -70,23 +74,23 @@ export function ActionSheet({ visible, title, subtitle, options, onClose }: Acti
                                         width: 36,
                                         height: 36,
                                         borderRadius: 10,
-                                        backgroundColor: opt.danger ? '#fee2e2' : '#e0f2fe',
+                                        backgroundColor: opt.danger ? colors.dangerIconBg : colors.normalIconBg,
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                     }}>
-                                        <Ionicons name={opt.icon as any} size={18} color={opt.danger ? '#dc2626' : '#1e4b69'} />
+                                        <Ionicons name={opt.icon as any} size={18} color={opt.danger ? colors.dangerText : colors.normalIconColor} />
                                     </View>
                                 ) : null}
                                 <Text style={{
                                     fontFamily: 'Manrope_600SemiBold',
                                     fontSize: 14,
-                                    color: opt.danger ? '#dc2626' : '#1e4b69',
+                                    color: opt.danger ? colors.dangerText : colors.text,
                                     flex: 1,
                                 }}>
                                     {opt.label}
                                 </Text>
                                 {!opt.danger ? (
-                                    <Ionicons name="chevron-forward" size={16} color="#cbd5e1" />
+                                    <Ionicons name="chevron-forward" size={16} color={colors.subtleText} />
                                 ) : null}
                             </TouchableOpacity>
                         ))}
@@ -97,8 +101,8 @@ export function ActionSheet({ visible, title, subtitle, options, onClose }: Acti
                         <TouchableOpacity
                             onPress={onClose}
                             activeOpacity={0.75}
-                            style={{ paddingVertical: 14, borderRadius: 14, alignItems: 'center', backgroundColor: '#f1f5f9' }}>
-                            <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: '#64748b' }}>Cancel</Text>
+                            style={{ paddingVertical: 14, borderRadius: 14, alignItems: 'center', backgroundColor: colors.cancelBg }}>
+                            <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 14, color: colors.mutedText }}>Cancel</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

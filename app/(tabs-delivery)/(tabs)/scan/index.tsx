@@ -117,7 +117,7 @@ export default function DeliveryPersonScanScreen() {
     // ── Manual entry mode ──────────────────────────────────────────────────────
     if (mode === 'manual') {
         return (
-            <SafeAreaView className="flex-1 bg-white">
+            <SafeAreaView className="flex-1 bg-white dark:bg-slate-900">
                 <AppModal
                     visible={errorModal.visible}
                     type="error"

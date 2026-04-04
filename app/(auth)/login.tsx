@@ -1,3 +1,4 @@
+import { toast } from '@/src/utils/sonner';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -9,7 +10,6 @@ import { loginAdmin } from '../../src/api/auth';
 import { CustomInput } from '../../src/components/forms/CustomInput';
 import { ActionButton } from '../../src/components/ui/ActionButton';
 import { useAuthStore } from '../../src/store/authStore';
-import { toast } from '@/src/utils/sonner';
 
 const loginSchema = z.object({
     email: z.string().email('Please enter a valid email address'),
@@ -33,7 +33,6 @@ export default function LoginScreen() {
                 email: data.email,
                 password: data.password,
             });
-            console.log('Login response:', response);
 
             if (response.accessToken?.accessToken) {
                 const { accessToken, refreshToken } = response.accessToken;
@@ -51,7 +50,6 @@ export default function LoginScreen() {
                 };
 
                 setAuth(accessToken, refreshToken, user);
-                console.log('Login success, role:', user.role);
 
                 if (user.role === 'delivery_person' || user.role === 'staff') {
                     router.replace('/(tabs-delivery)' as any);
@@ -70,7 +68,7 @@ export default function LoginScreen() {
     };
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-white dark:bg-slate-900">
             <View
                 className="absolute top-0 w-full overflow-hidden"
                 style={{ height: 340 }}>

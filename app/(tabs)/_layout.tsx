@@ -4,26 +4,31 @@ import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import RoleGuard from '@/src/components/navigation/RoleGuard';
 
-const TAB_BAR_STYLE = {
-  backgroundColor: '#FFFFFF',
-  borderTopWidth: 1,
-  borderTopColor: '#F3F4F6',
-  height: Platform.OS === 'ios' ? 88 : 68,
-  paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-  paddingTop: 10,
-};
-
 export default function AdminTabLayout() {
+  const scheme = useColorScheme() ?? 'light';
+  const colors = Colors[scheme];
+
+  const TAB_BAR_STYLE = {
+    backgroundColor: colors.tabBar,
+    borderTopWidth: 1,
+    borderTopColor: colors.tabBarBorder,
+    height: Platform.OS === 'ios' ? 88 : 68,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 10,
+    paddingTop: 10,
+  };
+
   return (
     <RoleGuard allowedRoles={['admin', 'super_admin']}>
     <Tabs
       initialRouteName="index"
       backBehavior="history"
       screenOptions={{
-        tabBarActiveTintColor: '#f0782d',
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarActiveTintColor: colors.tabIconSelected,
+        tabBarInactiveTintColor: colors.tabIconDefault,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: TAB_BAR_STYLE,

@@ -107,7 +107,7 @@ export default function DeliveryDetailScreen() {
 
     if (loading) {
         return (
-            <SafeAreaView className="flex-1 bg-white items-center justify-center">
+            <SafeAreaView className="flex-1 bg-white dark:bg-slate-900 items-center justify-center">
                 <ActivityIndicator size="large" color="#F0782D" />
                 <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 mt-3">
                     Loading delivery…
@@ -118,7 +118,7 @@ export default function DeliveryDetailScreen() {
 
     if (error || !delivery) {
         return (
-            <SafeAreaView className="flex-1 bg-white items-center justify-center px-8">
+            <SafeAreaView className="flex-1 bg-white dark:bg-slate-900 items-center justify-center px-8">
                 <Ionicons name="alert-circle-outline" size={52} color="#CBD5E1" />
                 <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-lg text-center mt-4">
                     Delivery Not Found
@@ -166,7 +166,7 @@ export default function DeliveryDetailScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white dark:bg-slate-900">
             {/* ── Top bar ── */}
             <View className="flex-row items-center px-5 pt-4 pb-3 border-b border-slate-100 bg-white">
                 <TouchableOpacity

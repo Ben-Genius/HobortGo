@@ -1,9 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/src/store/authStore';
+import { ActionSheet } from '@/src/components/ui/ActionSheet';
+import { ThemePreference, useSettingsStore } from '@/src/store/settingsStore';
 
 type SettingsRowProps = {
     icon: keyof typeof Ionicons.glyphMap;
@@ -20,14 +22,14 @@ function SettingsRow({ icon, iconBg, iconColor, label, onPress, destructive, val
         <TouchableOpacity
             onPress={onPress}
             activeOpacity={0.7}
-            className="flex-row items-center px-4 py-3.5 border-b border-slate-100 last:border-b-0"
+            className="flex-row items-center px-4 py-3.5 border-b border-slate-100 dark:border-slate-700 last:border-b-0"
         >
             <View className="w-9 h-9 rounded-lg items-center justify-center mr-3" style={{ backgroundColor: iconBg }}>
                 <Ionicons name={icon} size={18} color={iconColor} />
             </View>
             <Text
                 style={{ fontFamily: 'Manrope_500Medium' }}
-                className={`flex-1 text-sm ${destructive ? 'text-red-500' : 'text-slate-700'}`}
+                className={`flex-1 text-sm ${destructive ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}
             >
                 {label}
             </Text>
@@ -41,7 +43,7 @@ function SettingsRow({ icon, iconBg, iconColor, label, onPress, destructive, val
 
 function SectionCard({ children }: { children: React.ReactNode }) {
     return (
-        <View className="bg-white rounded-xl border border-slate-100 overflow-hidden mb-4">
+        <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden mb-4">
             {children}
         </View>
     );
@@ -55,9 +57,17 @@ function SectionLabel({ title }: { title: string }) {
     );
 }
 
+const APPEARANCE_LABELS: Record<ThemePreference, string> = {
+    light: 'Light',
+    dark: 'Dark',
+    system: 'System',
+};
+
 export default function AdminSettingsScreen() {
     const router = useRouter();
     const { user, role, logout } = useAuthStore();
+    const { themePreference, setThemePreference } = useSettingsStore();
+    const [appearanceSheetVisible, setAppearanceSheetVisible] = useState(false);
 
     const initials = user?.name
         ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -85,10 +95,10 @@ export default function AdminSettingsScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-slate-50">
+        <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900">
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View className="pt-10 pb-6 px-5">
-                    <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-xl">
+                    <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary dark:text-white text-xl">
                         Settings
                     </Text>
                 </View>
@@ -103,7 +113,7 @@ export default function AdminSettingsScreen() {
                                 </Text>
                             </View>
                             <View className="flex-1">
-                                <Text style={{ fontFamily: 'Manrope_600SemiBold' }} className="text-slate-800 text-base" numberOfLines={1}>
+                                <Text style={{ fontFamily: 'Manrope_600SemiBold' }} className="text-slate-800 dark:text-slate-100 text-base" numberOfLines={1}>
                                     {displayName}
                                 </Text>
                                 <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-400 text-xs mt-0.5" numberOfLines={1}>
@@ -136,7 +146,14 @@ export default function AdminSettingsScreen() {
                             onPress={() => router.push('/(tabs)/notifications/index' as any)}
                         />
                         <SettingsRow icon="language-outline" iconBg="#ECFDF5" iconColor="#059669" label="Language" value="English" />
-                        <SettingsRow icon="color-palette-outline" iconBg="#FFF1F2" iconColor="#E11D48" label="Appearance" value="Light" />
+                        <SettingsRow
+                            icon="color-palette-outline"
+                            iconBg="#FFF1F2"
+                            iconColor="#E11D48"
+                            label="Appearance"
+                            value={APPEARANCE_LABELS[themePreference]}
+                            onPress={() => setAppearanceSheetVisible(true)}
+                        />
                     </SectionCard>
 
                     {/* Support */}
@@ -160,6 +177,30 @@ export default function AdminSettingsScreen() {
                     </SectionCard>
                 </View>
             </ScrollView>
+
+            <ActionSheet
+                visible={appearanceSheetVisible}
+                title="Appearance"
+                subtitle="Choose how the app looks"
+                onClose={() => setAppearanceSheetVisible(false)}
+                options={[
+                    {
+                        label: 'Light',
+                        icon: themePreference === 'light' ? 'checkmark-circle' : 'sunny-outline',
+                        onPress: () => setThemePreference('light'),
+                    },
+                    {
+                        label: 'Dark',
+                        icon: themePreference === 'dark' ? 'checkmark-circle' : 'moon-outline',
+                        onPress: () => setThemePreference('dark'),
+                    },
+                    {
+                        label: 'System Default',
+                        icon: themePreference === 'system' ? 'checkmark-circle' : 'phone-portrait-outline',
+                        onPress: () => setThemePreference('system'),
+                    },
+                ]}
+            />
         </SafeAreaView>
     );
 }

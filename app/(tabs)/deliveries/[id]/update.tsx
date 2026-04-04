@@ -35,7 +35,6 @@ export default function AdminDeliveryUpdateScreen() {
     // `id` comes from the URL segment deliveries/[id]/update
     const { id } = useLocalSearchParams<{ id: string }>();
 
-    console.log("ID", id);
     const router = useRouter();
 
     const [delivery, setDelivery] = useState<any>(null);
@@ -84,7 +83,7 @@ export default function AdminDeliveryUpdateScreen() {
         // Normalize incoming ID types from backend
         const rawIdType = (rb?.idType || dData.idType || 'id-card').toLowerCase();
         let normalizedIdType: IDType = 'id-card';
-        
+
         if (rawIdType.includes('passport')) normalizedIdType = 'passport';
         else if (rawIdType.includes('driving') || rawIdType.includes('licence') || rawIdType.includes('license')) normalizedIdType = 'driving-licence';
         else if (rawIdType.includes('voter')) normalizedIdType = 'voter-card';
@@ -246,7 +245,7 @@ export default function AdminDeliveryUpdateScreen() {
     const itemCount = shipment.items?.length ?? 0;
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white dark:bg-slate-900">
             {/* Header */}
             <View className="flex-row items-center justify-between px-5 pt-2 mb-5">
                 <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 bg-slate-50 rounded-lg items-center justify-center border border-slate-100">

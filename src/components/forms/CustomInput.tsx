@@ -19,7 +19,7 @@ export function CustomInput<T extends FieldValues>({
     return (
         <View className="mb-2">
             {label && (
-                <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-500 text-xs uppercase tracking-wider mb-2 ml-1">
+                <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider mb-2 ml-1">
                     {label}
                 </Text>
             )}
@@ -28,7 +28,7 @@ export function CustomInput<T extends FieldValues>({
                 name={name}
                 render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                        className={`rounded-lg px-4 pt-3 pb-5 bg-slate-50 text-brand-secondary text-base border-2 ${error ? 'border-red-100 bg-red-50/30' : 'border-transparent focus:border-brand-orange/20 focus:bg-white'
+                        className={`rounded-lg px-4 pt-3 pb-5 bg-slate-50 dark:bg-slate-800 text-brand-secondary dark:text-slate-100 text-base border-2 ${error ? 'border-red-100 bg-red-50/30 dark:border-red-900 dark:bg-red-900/20' : 'border-transparent focus:border-brand-orange/20 focus:bg-white dark:focus:bg-slate-700'
                             }`}
                         onBlur={onBlur}
                         onChangeText={onChange}

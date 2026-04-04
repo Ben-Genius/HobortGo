@@ -201,7 +201,7 @@ export default function AdminScanScreen() {
     if (mode === 'manual') {
         const activeScanTypeCfg = SCAN_TYPES.find(s => s.value === scanType)!;
         return (
-            <SafeAreaView className="flex-1 bg-white">
+            <SafeAreaView className="flex-1 bg-white dark:bg-slate-900">
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
                     <View className="pt-6 px-5 flex-1">
                         {/* Header */}

@@ -68,7 +68,7 @@ export default function DeliveryPersonNotificationsScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white dark:bg-slate-900">
             {/* Header */}
             <View className="bg-white pt-6 pb-4 px-5 border-b border-slate-100">
                 <View className="flex-row justify-between items-center">

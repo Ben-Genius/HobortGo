@@ -6,6 +6,7 @@ import { getDeliveries } from '../../src/api/delivery';
 import { getShipments } from '../../src/api/shipment';
 import { useAuthStore } from '../../src/store/authStore';
 import { IShipment } from '../../src/types/shipment.types';
+import { useTheme } from '@/hooks/use-theme';
 
 const INITIAL_SUMMARY = [
     { label: 'Pending', value: 0, icon: 'time', color: '#f0782d', bg: '#fff0e6', statusKey: 'Pending' },
@@ -14,18 +15,18 @@ const INITIAL_SUMMARY = [
     { label: 'Delivered', value: 0, icon: 'checkmark-circle', color: '#16a34a', bg: '#f0fdf4', statusKey: 'Delivered' },
 ] as const;
 
-function getStatusStyle(status: string): { bg: string; text: string; icon: any } {
+function getStatusStyle(status: string, isDark: boolean): { bg: string; text: string; icon: any } {
     switch (status) {
-        case 'Delivered': return { bg: '#dcfce7', text: '#16a34a', icon: 'checkmark-circle-outline' };
-        case 'In-transit': 
+        case 'Delivered': return { bg: isDark ? '#14532d' : '#dcfce7', text: isDark ? '#4ade80' : '#16a34a', icon: 'checkmark-circle-outline' };
+        case 'In-transit':
         case 'In Transit':
-        case 'Out for Delivery': return { bg: '#f3f0ff', text: '#7c3aed', icon: 'bicycle-outline' };
-        case 'Pending': return { bg: '#fff0e6', text: '#f0782d', icon: 'time-outline' };
-        case 'Scheduled': return { bg: '#fef9c3', text: '#a16207', icon: 'calendar-outline' };
-        case 'Confiscated': return { bg: '#fee2e2', text: '#dc2626', icon: 'alert-circle-outline' };
+        case 'Out for Delivery': return { bg: isDark ? '#2e1065' : '#f3f0ff', text: isDark ? '#a78bfa' : '#7c3aed', icon: 'bicycle-outline' };
+        case 'Pending': return { bg: isDark ? '#431407' : '#fff0e6', text: isDark ? '#fb923c' : '#f0782d', icon: 'time-outline' };
+        case 'Scheduled': return { bg: isDark ? '#422006' : '#fef9c3', text: isDark ? '#fbbf24' : '#a16207', icon: 'calendar-outline' };
+        case 'Confiscated': return { bg: isDark ? '#7f1d1d' : '#fee2e2', text: isDark ? '#f87171' : '#dc2626', icon: 'alert-circle-outline' };
         case 'Received':
-        case 'ReceivedGH': return { bg: '#e0f2fe', text: '#0369a1', icon: 'archive-outline' };
-        default: return { bg: '#f1f5f9', text: '#64748b', icon: 'help-circle-outline' };
+        case 'ReceivedGH': return { bg: isDark ? '#0c4a6e' : '#e0f2fe', text: isDark ? '#38bdf8' : '#0369a1', icon: 'archive-outline' };
+        default: return { bg: isDark ? '#1e293b' : '#f1f5f9', text: isDark ? '#94a3b8' : '#64748b', icon: 'help-circle-outline' };
     }
 }
 
@@ -42,6 +43,8 @@ function formatTimestamp(ts: string): string {
 
 export default function AdminDashboardScreen() {
     const router = useRouter();
+    const { scheme } = useTheme();
+    const isDark = scheme === 'dark';
     const user = useAuthStore(state => state.user);
     const token = useAuthStore(state => state.token);
     const [loading, setLoading] = React.useState(true);
@@ -88,7 +91,7 @@ export default function AdminDashboardScreen() {
 
     if (loading) {
         return (
-            <View className="flex-1 items-center justify-center bg-white">
+            <View className="flex-1 items-center justify-center bg-white dark:bg-slate-900">
                 <ActivityIndicator size="large" color="#F0782D" />
                 <Text className="mt-4 text-slate-400 font-medium">Loading Dashboard...</Text>
             </View>
@@ -106,7 +109,7 @@ export default function AdminDashboardScreen() {
                         </Text>
                     </View>
                     <TouchableOpacity
-                        className="w-12 h-12 bg-slate-50 rounded-lg items-center justify-center border border-slate-100"
+                        className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-lg items-center justify-center border border-slate-100 dark:border-slate-700"
                         onPress={() => router.push('/(tabs)/notifications' as any)}>
                         <Ionicons name="notifications-outline" size={22} color="#1e4b69" />
                         <View className="absolute top-3 right-3 w-2 h-2 bg-brand-orange rounded-full border-2 border-white" />
@@ -114,7 +117,7 @@ export default function AdminDashboardScreen() {
                 </View>
             </View>
             <ScrollView
-                className="flex-1 bg-white"
+                className="flex-1 bg-white dark:bg-slate-900"
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
@@ -181,14 +184,14 @@ export default function AdminDashboardScreen() {
 
                     <View className="mb-10">
                         {recentDeliveries.length === 0 ? (
-                            <View className="p-10 items-center justify-center bg-slate-50 rounded-lg border border-slate-100">
+                            <View className="p-10 items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
                                 <Ionicons name="bicycle-outline" size={32} color="#CBD5E1" />
                                 <Text className="text-slate-400 mt-2 font-medium">No recent deliveries</Text>
                             </View>
                         ) : (
                             recentDeliveries.map((delivery: any) => {
                                 const status = delivery.statusId?.status ?? delivery.shipmentId?.status?.status ?? 'Unknown';
-                                const statusStyle = getStatusStyle(status);
+                                const statusStyle = getStatusStyle(status, isDark);
                                 const deliveredBy = delivery.deliveredBy
                                     ? `${delivery.deliveredBy.firstname} ${delivery.deliveredBy.lastname}`
                                     : 'Unassigned';
@@ -200,10 +203,10 @@ export default function AdminDashboardScreen() {
                                         key={delivery._id}
                                         activeOpacity={0.75}
                                         onPress={() => router.push(`/(tabs)/deliveries/${delivery._id}` as any)}
-                                        className="p-4 bg-slate-50 rounded-xl mb-3 border border-slate-100">
+                                        className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl mb-3 border border-slate-100 dark:border-slate-700">
                                         <View className="flex-row items-start">
                                             {/* Icon */}
-                                            <View className="w-11 h-11 bg-white rounded-lg items-center justify-center border border-slate-100 mt-0.5">
+                                            <View className="w-11 h-11 bg-white dark:bg-slate-700 rounded-lg items-center justify-center border border-slate-100 dark:border-slate-600 mt-0.5">
                                                 <Ionicons
                                                     name={delivery.type === 'Pickup' ? 'storefront-outline' : 'bicycle-outline'}
                                                     size={20}
@@ -221,7 +224,7 @@ export default function AdminDashboardScreen() {
                                                             numberOfLines={1}>
                                                             {shipmentCode}
                                                         </Text>
-                                                        <View className="px-1.5 py-0.5 bg-slate-100 rounded">
+                                                        <View className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded">
                                                             <Text style={{ fontFamily: 'Manrope_600SemiBold' }} className="text-slate-500 text-[9px] uppercase tracking-tighter">
                                                                 {delivery.type ?? 'Delivery'}
                                                             </Text>

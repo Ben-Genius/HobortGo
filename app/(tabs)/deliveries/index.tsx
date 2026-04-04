@@ -102,7 +102,7 @@ export default function AdminDeliveriesScreen() {
             <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={() => router.push(`/(tabs)/deliveries/${item._id}` as any)}
-                className="bg-slate-50 rounded-lg p-4 mb-3 border border-slate-100">
+                className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 mb-3 border border-slate-100 dark:border-slate-700">
                 {/* Header row: tracking ID + status badge */}
                 <View className="flex-row justify-between items-center mb-3">
                     <View>
@@ -164,7 +164,7 @@ export default function AdminDeliveriesScreen() {
 
                 {/* Notes pill */}
                 {item.notes ? (
-                    <View className="bg-slate-100 rounded-lg px-3 py-2 mb-3">
+                    <View className="bg-slate-100 dark:bg-slate-700 rounded-lg px-3 py-2 mb-3">
                         <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 11 }} className="text-slate-500" numberOfLines={2}>
                             {item.notes}
                         </Text>
@@ -198,7 +198,7 @@ export default function AdminDeliveriesScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white dark:bg-slate-900">
             <View className="pt-6 pb-4 px-5">
                 <View className="flex-row justify-between items-center mb-5">
                     <View>
@@ -243,7 +243,7 @@ export default function AdminDeliveriesScreen() {
                             onPress={() => setActiveFilter(item)}
                             className={`px-4 py-2 rounded-lg mr-2 border ${activeFilter === item
                                 ? 'bg-brand-secondary border-brand-secondary'
-                                : 'bg-white border-slate-100'
+                                : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'
                                 }`}>
                             <Text style={{
                                 fontFamily: 'Manrope_600SemiBold',

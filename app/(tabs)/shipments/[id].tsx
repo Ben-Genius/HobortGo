@@ -250,7 +250,7 @@ export default function AdminShipmentDetailScreen() {
     const sc = getStatus(shipment.status?.status ?? '');
 
     return (
-        <View className="flex-1 bg-slate-50">
+        <View className="flex-1 bg-slate-50 dark:bg-slate-900">
 
             {/* ── Feedback Modal ── */}
             <AppModal
@@ -424,14 +424,14 @@ export default function AdminShipmentDetailScreen() {
             </Modal>
 
             {/* ── Compact Header ── */}
-            <View className="bg-white border-b border-slate-100 px-5" style={{ paddingTop: 58, paddingBottom: 14 }}>
+            <View className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700 px-5" style={{ paddingTop: 58, paddingBottom: 14 }}>
                 <View className="flex-row items-center justify-between mb-4">
                     <TouchableOpacity onPress={() => router.push('/(tabs)/shipments')}
-                        className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 items-center justify-center">
+                        className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 items-center justify-center">
                         <Ionicons name="arrow-back" size={18} color="#1e4b69" />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleStatusOverride}
-                        className="h-9 px-4 rounded-xl bg-slate-50 border border-slate-100 items-center justify-center flex-row gap-1.5">
+                        className="h-9 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 items-center justify-center flex-row gap-1.5">
                         <Ionicons name="swap-horizontal-outline" size={14} color="#1e4b69" />
                         <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 12 }} className="text-brand-secondary">Update Status</Text>
                     </TouchableOpacity>
@@ -463,7 +463,7 @@ export default function AdminShipmentDetailScreen() {
                             )}
                         </View>
                     </View>
-                    <View className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 items-center">
+                    <View className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl px-4 py-2.5 items-center">
                         <Text style={{ fontFamily: 'Poppins_700Bold', fontSize: 22 }} className="text-brand-secondary">
                             {shipment.shipments?.length ?? 0}
                         </Text>
@@ -493,7 +493,7 @@ export default function AdminShipmentDetailScreen() {
             </View>
 
             {/* ── Tab Bar ── */}
-            <View className="bg-white border-b border-slate-100 flex-row px-5">
+            <View className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700 flex-row px-5">
                 {(['details', 'timeline', 'packages'] as Tab[]).map(t => (
                     <TouchableOpacity
                         key={t}
@@ -651,7 +651,7 @@ export default function AdminShipmentDetailScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={openFlagSheet}
-                    className="bg-slate-50 border border-slate-200 py-3.5 px-5 rounded-xl flex-row items-center gap-2">
+                    className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-3.5 px-5 rounded-xl flex-row items-center gap-2">
                     <Ionicons name="flag-outline" size={17} color="#1e4b69" />
                     <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 14 }} className="text-brand-secondary">Flag</Text>
                 </TouchableOpacity>

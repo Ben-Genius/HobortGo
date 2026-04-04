@@ -15,8 +15,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getDeliveries } from '@/src/api/delivery';
 import { useAuthStore } from '@/src/store/authStore';
+import { useTheme } from '@/hooks/use-theme';
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string }> = {
+const STATUS_CONFIG_LIGHT: Record<string, { bg: string; text: string; dot: string }> = {
     'Pending':   { bg: '#fef3c7', text: '#92400e',  dot: '#d97706' },
     'Scheduled': { bg: '#e6f0f5', text: '#1e4b69',  dot: '#1e4b69' },
     'Assigned':  { bg: '#e6f0f5', text: '#1e4b69',  dot: '#1e4b69' },
@@ -25,11 +26,22 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string }> =
     'Failed':    { bg: '#fef2f2', text: '#dc2626',  dot: '#dc2626' },
 };
 
+const STATUS_CONFIG_DARK: Record<string, { bg: string; text: string; dot: string }> = {
+    'Pending':   { bg: '#422006', text: '#fbbf24',  dot: '#d97706' },
+    'Scheduled': { bg: '#0c3a5a', text: '#38bdf8',  dot: '#38bdf8' },
+    'Assigned':  { bg: '#0c3a5a', text: '#38bdf8',  dot: '#38bdf8' },
+    'Out':       { bg: '#431407', text: '#fb923c',  dot: '#f0782d' },
+    'Delivered': { bg: '#14532d', text: '#4ade80',  dot: '#4ade80' },
+    'Failed':    { bg: '#7f1d1d', text: '#f87171',  dot: '#f87171' },
+};
+
 const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
 export default function DeliveryPersonHomeScreen() {
     const router = useRouter();
+    const { scheme } = useTheme();
+    const STATUS_CONFIG = scheme === 'dark' ? STATUS_CONFIG_DARK : STATUS_CONFIG_LIGHT;
     const user = useAuthStore(state => state.user);
     const [deliveries, setDeliveries] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -89,7 +101,7 @@ export default function DeliveryPersonHomeScreen() {
                     params: { id: item._id, data: JSON.stringify(item) },
                 })}
                 style={{ shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, borderColor: cfg.dot, borderWidth: 0.17, shadowOffset: { width: 0, height: 2 } }}
-                className="bg-white rounded-xl mb-3 overflow-hidden"
+                className="bg-white dark:bg-slate-800 rounded-xl mb-3 overflow-hidden"
             >
                 <View className="pl-5 pr-4 py-4">
                     <View className="flex-row justify-between items-center mb-2.5">
@@ -114,14 +126,14 @@ export default function DeliveryPersonHomeScreen() {
                     <View className="flex-row items-center justify-between">
                         <View className="flex-row gap-2">
                             {shipmentType && (
-                                <View className="flex-row items-center gap-1 bg-slate-100 px-2.5 py-1 rounded-full">
+                                <View className="flex-row items-center gap-1 bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-full">
                                     <Ionicons name={shipmentType === 'Air Freight' ? 'airplane-outline' : 'boat-outline'} size={11} color="#64748B" />
-                                    <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-500">{shipmentType}</Text>
+                                    <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-500 dark:text-slate-400">{shipmentType}</Text>
                                 </View>
                             )}
-                            <View className="flex-row items-center gap-1 bg-slate-100 px-2.5 py-1 rounded-full">
+                            <View className="flex-row items-center gap-1 bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-full">
                                 <Ionicons name="calendar-outline" size={11} color="#64748B" />
-                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-500">{date}</Text>
+                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-500 dark:text-slate-400">{date}</Text>
                             </View>
                         </View>
                         <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
@@ -132,7 +144,7 @@ export default function DeliveryPersonHomeScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white dark:bg-slate-900">
             <StatusBar style="auto" />
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -149,7 +161,7 @@ export default function DeliveryPersonHomeScreen() {
                             </Text>
                         </View>
                         <TouchableOpacity
-                            className="w-12 h-12 bg-slate-50 rounded-lg items-center justify-center border border-slate-100"
+                            className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-lg items-center justify-center border border-slate-100 dark:border-slate-700"
                             onPress={() => router.push('/(tabs-delivery)/notifications' as any)}
                         >
                             <Ionicons name="notifications-outline" size={22} color="#1e4b69" />
@@ -225,7 +237,7 @@ export default function DeliveryPersonHomeScreen() {
                                 <TouchableOpacity
                                     activeOpacity={0.8}
                                     onPress={() => router.push('/(tabs-delivery)/completed' as any)}
-                                    className="flex-row items-center justify-center gap-2 py-3.5 border border-slate-200 rounded-xl mb-2"
+                                    className="flex-row items-center justify-center gap-2 py-3.5 border border-slate-200 dark:border-slate-700 rounded-xl mb-2"
                                 >
                                     <Text style={{ fontFamily: 'Manrope_600SemiBold' }} className="text-brand-secondary text-sm">
                                         View all {deliveries.length} deliveries

@@ -58,7 +58,7 @@ export default function OnboardingScreen() {
     );
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-white dark:bg-slate-900">
             {/* Top Toolbar: Title & Skip button */}
             <View className="absolute top-16 w-full px-8 z-10 flex-row justify-between items-center">
                 <Text className="text-xl font-extrabold tracking-tight text-[#1e4b69]">

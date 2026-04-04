@@ -1,4 +1,4 @@
-import { IShipmentMaster, IShipmentMasterPayload } from '../types/shipment.types';
+import { IScannedShipment, IShipmentMaster, IShipmentMasterPayload } from '../types/shipment.types';
 import { apiClient } from './client';
 
 /** GET /api/v1/shipmentmaster — All masters */
@@ -51,10 +51,12 @@ export const assignShipmentMaster = async (id: string): Promise<IShipmentMaster>
     return data;
 };
 
-/** GET /api/v1/shipmentmaster/items/{trackingCode} — Lookup by tracking code (scan flow) */
-export const getShipmentMasterByTrackingCode = async (trackingCode: string): Promise<IShipmentMaster> => {
-    const { data } = await apiClient.get(`/shipmentmaster/items/${trackingCode}`);
-    return data;
+/** GET /api/v1/shipmentmaster/items/{trackingCode} — Lookup by tracking code (scan flow)
+ *  Response shape: { data: { shipments: IScannedShipment[], totalItems: number } }
+ */
+export const getShipmentMasterByTrackingCode = async (trackingCode: string): Promise<{ shipments: IScannedShipment[]; totalItems: number }> => {
+    const res = await apiClient.get(`/shipmentmaster/items/${trackingCode}`);
+    return res.data?.data ?? res.data;
 };
 
 /** PATCH /api/v1/shipmentmaster/items/status — Update status by tracking code */

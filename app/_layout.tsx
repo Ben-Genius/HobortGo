@@ -10,19 +10,20 @@ import {
   Poppins_600SemiBold,
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import 'react-native-reanimated';
 import { Toaster } from 'sonner-native';
 
 import '../global.css';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/hooks/use-theme';
+import { ThemeProvider } from '@/src/context/ThemeContext';
 import { useAuthStore } from '../src/store/authStore';
 
 SplashScreen.preventAutoHideAsync();
@@ -31,8 +32,8 @@ export const unstable_settings = {
   initialRouteName: '(tabs)',
 };
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function RootNavigator() {
+  const { scheme } = useTheme();
   const router = useRouter();
   const { token, role, hasSeenOnboarding } = useAuthStore();
   const [storeHydrated, setStoreHydrated] = useState(false);
@@ -42,30 +43,26 @@ export default function RootLayout() {
     let safetyTimeout: any;
 
     try {
-        console.log('[DEBUG] mmkv hydration check...');
-        if (useAuthStore.persist.hasHydrated()) {
-          console.log('[DEBUG] mmkv already hydrated.');
-          setStoreHydrated(true);
-        }
+      if (useAuthStore.persist.hasHydrated()) {
+        setStoreHydrated(true);
+      }
 
-        const unsub = useAuthStore.persist.onFinishHydration(() => {
-            console.log('[DEBUG] mmkv hydration finished via listener.');
-            setStoreHydrated(true);
-        });
+      const unsub = useAuthStore.persist.onFinishHydration(() => {
+        setStoreHydrated(true);
+      });
 
-        // 5s Safety fallback
-        safetyTimeout = setTimeout(() => {
-            console.log('[DEBUG] mmkv hydration safety fallback triggered.');
-            setStoreHydrated(true);
-        }, 5000);
+      // 5s Safety fallback
+      safetyTimeout = setTimeout(() => {
+        setStoreHydrated(true);
+      }, 5000);
 
-        return () => {
-            unsub();
-            clearTimeout(safetyTimeout);
-        };
+      return () => {
+        unsub();
+        clearTimeout(safetyTimeout);
+      };
     } catch (e) {
-        console.error('Initialisation error:', e);
-        setStoreHydrated(true); // Fail open
+      console.error('Initialisation error:', e);
+      setStoreHydrated(true); // Fail open
     }
   }, []);
   const [loaded] = useFonts({
@@ -120,7 +117,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <NavThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
           <Stack.Screen name="(tabs-delivery)" options={{ headerShown: false, gestureEnabled: false }} />
@@ -128,9 +125,17 @@ export default function RootLayout() {
           <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
-        <StatusBar style='auto' animated />
-      </ThemeProvider>
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} animated />
+      </NavThemeProvider>
       <Toaster />
     </GestureHandlerRootView>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <RootNavigator />
+    </ThemeProvider>
   );
 }

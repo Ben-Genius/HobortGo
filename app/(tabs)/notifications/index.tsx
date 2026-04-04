@@ -74,7 +74,7 @@ export default function AdminNotificationsScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white dark:bg-slate-900">
             {/* Header */}
             <View className="bg-white pt-6 pb-4 px-6 border-b border-gray-100">
                 <View className="flex-row justify-between items-center">

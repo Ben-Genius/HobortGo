@@ -249,7 +249,7 @@ export default function ScanResultScreen() {
 
     if (loading) {
         return (
-            <SafeAreaView className="flex-1 bg-white items-center justify-center">
+            <SafeAreaView className="flex-1 bg-white dark:bg-slate-900 items-center justify-center">
                 <ActivityIndicator size="large" color="#F0782D" />
                 <Text className="mt-4 text-slate-400">Fetching Details...</Text>
             </SafeAreaView>
@@ -260,7 +260,7 @@ export default function ScanResultScreen() {
 
     if (!delivery) {
         return (
-            <SafeAreaView className="flex-1 bg-white items-center justify-center px-6">
+            <SafeAreaView className="flex-1 bg-white dark:bg-slate-900 items-center justify-center px-6">
                 <View className="w-24 h-24 bg-red-50 rounded-full items-center justify-center mb-4">
                     <Ionicons name="alert-circle-outline" size={48} color="#f87171" />
                 </View>
@@ -293,9 +293,9 @@ export default function ScanResultScreen() {
     const shipment = delivery.shipmentId || {};
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white dark:bg-slate-900">
             <View className="flex-row items-center justify-between px-5 pt-2 mb-5">
-                <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 bg-slate-50 rounded-lg items-center justify-center border border-slate-100">
+                <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-lg items-center justify-center border border-slate-100 dark:border-slate-700">
                     <Ionicons name="arrow-back-outline" size={20} color="#1e4b69" />
                 </TouchableOpacity>
                 <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-400 text-xs uppercase tracking-widest">Update Delivery</Text>
@@ -371,7 +371,7 @@ export default function ScanResultScreen() {
                     {shipment.items && shipment.items.length > 0 && (
                         <View className="mb-6">
                             <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-base mb-3">Shipment Contents</Text>
-                            <View className="bg-slate-50 border border-slate-100 rounded-2xl p-4 gap-3">
+                            <View className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 gap-3">
                                 {shipment.items.map((item: any, idx: number) => (
                                     <View key={idx} className={`flex-row items-center justify-between ${idx !== shipment.items.length - 1 ? 'border-b border-slate-200/50 pb-3' : ''}`}>
                                         <View className="flex-1 pr-4">
@@ -536,7 +536,7 @@ export default function ScanResultScreen() {
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={pickImage}
-                                className="flex-1 flex-row items-center justify-center gap-2 bg-slate-50 border border-slate-200 rounded-lg py-3">
+                                className="flex-1 flex-row items-center justify-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-3">
                                 <Ionicons name="image-outline" size={18} color="#64748b" />
                                 <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 13, color: '#64748b' }}>Gallery</Text>
                             </TouchableOpacity>

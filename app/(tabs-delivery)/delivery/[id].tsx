@@ -50,7 +50,7 @@ const SectionCard = ({ icon, title, children }: { icon: any; title: string; chil
             <Ionicons name={icon} size={14} color="#1e4b69" />
             <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-sm">{title}</Text>
         </View>
-        <View className="bg-white rounded-xl border border-slate-100 overflow-hidden">{children}</View>
+        <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden">{children}</View>
     </View>
 );
 
@@ -96,7 +96,7 @@ export default function DeliveryDetailScreen() {
 
     if (loading && !refreshing) {
         return (
-            <SafeAreaView className="flex-1 bg-white items-center justify-center">
+            <SafeAreaView className="flex-1 bg-white dark:bg-slate-900 items-center justify-center">
                 <ActivityIndicator size="large" color="#F0782D" />
                 <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-400 mt-3 text-sm">Loading details...</Text>
             </SafeAreaView>
@@ -105,7 +105,7 @@ export default function DeliveryDetailScreen() {
 
     if (error || !delivery) {
         return (
-            <SafeAreaView className="flex-1 bg-white items-center justify-center px-8">
+            <SafeAreaView className="flex-1 bg-white dark:bg-slate-900 items-center justify-center px-8">
                 <Ionicons name="alert-circle-outline" size={52} color="#CBD5E1" />
                 <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-lg text-center mt-4">
                     Delivery Not Found
@@ -135,7 +135,7 @@ export default function DeliveryDetailScreen() {
     return (
         <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={['top']}>
             {/* Header */}
-            <View className="flex-row items-center px-5 pt-4 pb-3 bg-white border-b border-slate-100">
+            <View className="flex-row items-center px-5 pt-4 pb-3 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700">
                 <TouchableOpacity
                     className="w-9 h-9 bg-slate-100 rounded-lg items-center justify-center mr-3"
                     onPress={() => router.back()}
@@ -165,7 +165,7 @@ export default function DeliveryDetailScreen() {
                 }
             >
                 {/* Hero card */}
-                <View className="bg-white rounded-xl border border-slate-100 p-5 mb-4">
+                <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-5 mb-4">
                     <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-400 text-xs uppercase tracking-widest mb-1">
                         Shipment Code
                     </Text>
@@ -185,13 +185,13 @@ export default function DeliveryDetailScreen() {
                     )}
                     <View className="flex-row flex-wrap gap-2 mt-4">
                         {shipment.shipmentType && (
-                            <View className="flex-row items-center gap-1.5 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-full">
+                            <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-3 py-1.5 rounded-full">
                                 <Ionicons name={shipment.shipmentType === 'Air Freight' ? 'airplane-outline' : 'boat-outline'} size={12} color="#1e4b69" />
                                 <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 11 }} className="text-brand-secondary">{shipment.shipmentType}</Text>
                             </View>
                         )}
                         {delivery.timestamp && (
-                            <View className="flex-row items-center gap-1.5 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-full">
+                            <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-3 py-1.5 rounded-full">
                                 <Ionicons name="calendar-outline" size={12} color="#1e4b69" />
                                 <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 11 }} className="text-brand-secondary">{fmtDate(delivery.timestamp)}</Text>
                             </View>
@@ -222,7 +222,7 @@ export default function DeliveryDetailScreen() {
                             <Ionicons name="document-text-outline" size={14} color="#1e4b69" />
                             <Text style={{ fontFamily: 'Poppins_600SemiBold' }} className="text-brand-secondary text-sm">Notes</Text>
                         </View>
-                        <View className="bg-white rounded-xl border border-slate-100 px-4 py-3">
+                        <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 px-4 py-3">
                             <Text style={{ fontFamily: 'Manrope_400Regular' }} className="text-slate-600 text-sm leading-5">{delivery.notes}</Text>
                         </View>
                     </View>
@@ -237,7 +237,7 @@ export default function DeliveryDetailScreen() {
                         <View className="flex-row gap-3 flex-wrap">
                             {signature && (
                                 <View className="items-center">
-                                    <View className="bg-white rounded-xl border border-slate-100 overflow-hidden">
+                                    <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden">
                                         <Image source={{ uri: signature.fileUrl }} style={{ width: 140, height: 100 }} resizeMode="contain" />
                                     </View>
                                     <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-400 text-xs mt-1.5">Signature</Text>
@@ -245,7 +245,7 @@ export default function DeliveryDetailScreen() {
                             )}
                             {photos.map((p: any) => (
                                 <View key={p._id} className="items-center">
-                                    <View className="bg-white rounded-xl border border-slate-100 overflow-hidden">
+                                    <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden">
                                         <Image source={{ uri: p.fileUrl }} style={{ width: 140, height: 100 }} resizeMode="cover" />
                                     </View>
                                     <Text style={{ fontFamily: 'Manrope_500Medium' }} className="text-slate-400 text-xs mt-1.5">Photo</Text>
