@@ -69,16 +69,23 @@ export default function AdminDeliveryUpdateScreen() {
         setDelivery(dData);
         if (dData.statusId?.status) setSelectedStatus(dData.statusId.status);
         const rb = dData.receivedBy;
-        // Support both firstName/lastName (PascalCase from snippet) and firstname/lastname (lowercase)
-        const firstName = rb?.firstName || rb?.firstname || '';
-        const lastName = rb?.lastName || rb?.lastname || '';
-        const fullName = rb ? `${firstName} ${lastName}`.trim() : '';
+        const rxType: ReceiveType = dData.receiveType || 'Self';
+
+        let fullName = '';
+        if (rxType === 'Self') {
+            const cb = dData.shipmentId?.createdBy;
+            fullName = cb ? `${cb.firstname || cb.firstName || ''} ${cb.lastname || cb.lastName || ''}`.trim() : '';
+        } else {
+            const firstName = rb?.firstName || rb?.firstname || '';
+            const lastName = rb?.lastName || rb?.lastname || '';
+            fullName = rb ? `${firstName} ${lastName}`.trim() : '';
+        }
 
         setReceivedById(rb?._id || null);
         setReceivedBy(fullName);
         setPhoneNumber(rb?.phoneNumber || dData.phoneNumber || '');
         setEmail(rb?.email || dData.email || '');
-        setReceiveType(dData.receiveType || 'Self');
+        setReceiveType(rxType);
 
         // Normalize incoming ID types from backend
         const rawIdType = (rb?.idType || dData.idType || 'id-card').toLowerCase();
@@ -384,7 +391,21 @@ export default function AdminDeliveryUpdateScreen() {
                             </View>
                         </View>
 
-                        <LockedField label="Full Name" value={receivedBy} />
+                        {receiveType === 'Other' ? (
+                            <View>
+                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-400 uppercase tracking-wider mb-1.5">Full Name *</Text>
+                                <TextInput
+                                    className="bg-white rounded-lg px-4 py-3.5 border border-orange-200"
+                                    style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 13, color: '#1e4b69' }}
+                                    placeholder="Enter recipient's full name"
+                                    placeholderTextColor="#94A3B8"
+                                    value={receivedBy}
+                                    onChangeText={setReceivedBy}
+                                />
+                            </View>
+                        ) : (
+                            <LockedField label="Full Name" value={receivedBy} />
+                        )}
                         <View className="flex-row gap-4">
                             <View className="flex-1"><LockedField label="Phone Number" value={phoneNumber} /></View>
                             <View className="flex-1"><LockedField label="Email" value={email} /></View>

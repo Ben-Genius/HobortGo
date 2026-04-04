@@ -94,22 +94,28 @@ export default function ScanResultScreen() {
                     }
 
                     const rb = dData.receivedBy;
-                    // Support both firstName/lastName (PascalCase from snippet) and firstname/lastname (lowercase)
-                    const firstName = rb?.firstName || rb?.firstname || '';
-                    const lastName = rb?.lastName || rb?.lastname || '';
-                    const rbName = rb ? `${firstName} ${lastName}`.trim() : '';
+                    const rxType: ReceiveType = dData.receiveType || 'Self';
+                    setReceiveType(rxType);
 
-                    const cb = dData.shipmentId?.createdBy;
-                    const cbName = cb ? `${cb.firstName || cb.firstname || ''} ${cb.lastName || cb.lastname || ''}`.trim() : '';
-
-                    // Use receivedBy name if available, otherwise fallback to shipment creator
-                    const fullName = rbName || cbName;
+                    // Name resolution depends on receive type
+                    let fullName = '';
+                    if (rxType === 'Self') {
+                        // Self pickup — owner is identified via shipment creator
+                        const cb = dData.shipmentId?.createdBy;
+                        fullName = cb
+                            ? `${cb.firstname || cb.firstName || ''} ${cb.lastname || cb.lastName || ''}`.trim()
+                            : '';
+                    } else {
+                        // VerifiedPerson / Other — use receivedBy object if present
+                        const firstName = rb?.firstName || rb?.firstname || '';
+                        const lastName = rb?.lastName || rb?.lastname || '';
+                        fullName = rb ? `${firstName} ${lastName}`.trim() : '';
+                    }
 
                     setReceivedById(rb?._id || null);
                     setReceivedBy(fullName);
                     setPhoneNumber(rb?.phoneNumber || dData.phoneNumber || '');
                     setEmail(rb?.email || dData.email || '');
-                    setReceiveType(dData.receiveType || 'Self');
 
                     // Normalize incoming ID types from backend
                     const rawIdType = (rb?.idType || dData.idType || 'id-card').toLowerCase();
@@ -180,6 +186,10 @@ export default function ScanResultScreen() {
     const handleSubmit = async () => {
         setErrorMsg(null);
 
+        if (receiveType === 'Other' && !receivedBy.trim()) {
+            setErrorMsg("Recipient name is required.");
+            return;
+        }
         if (!idNumber.trim()) {
             setErrorMsg("ID Number is required. Please enter the recipient's ID number.");
             return;
@@ -436,8 +446,21 @@ export default function ScanResultScreen() {
                             </View>
                         </View>
 
-                        <LockedField label="Full Name" value={receivedBy} />
-                        {/* <LockedField label="ID Type" value={ID_TYPE_LABELS[idType] || idType} /> */}
+                        {receiveType === 'Self' || receiveType === 'VerifiedPerson' ? (
+                            <LockedField label="Full Name" value={receivedBy} />
+                        ) : (
+                            <View>
+                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-400 uppercase tracking-wider mb-1.5">Full Name *</Text>
+                                <TextInput
+                                    className="bg-white dark:bg-slate-800 rounded-lg px-4 py-3.5 border border-slate-200 dark:border-slate-700"
+                                    style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 13, color: '#1e4b69' }}
+                                    placeholder="Enter recipient's full name"
+                                    placeholderTextColor="#94A3B8"
+                                    value={receivedBy}
+                                    onChangeText={setReceivedBy}
+                                />
+                            </View>
+                        )}
 
                         <View className="flex-row gap-4">
                             <View className="flex-1">

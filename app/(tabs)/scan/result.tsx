@@ -96,24 +96,32 @@ export default function AdminScanResultScreen() {
                     const dData = deliveryRes.data || deliveryRes;
                     setDelivery(dData);
                     if (dData.statusId?.status) setSelectedStatus(dData.statusId.status);
+
                     const rb = dData.receivedBy;
-                    const cb = dData.shipmentId?.createdBy;
-                    
-                    const rbName = rb ? `${rb.firstname || ''} ${rb.lastname || ''}`.trim() : '';
-                    const cbName = cb ? `${cb.firstname || ''} ${cb.lastname || ''}`.trim() : '';
-                    
-                    // Use receivedBy name if available, otherwise fallback to shipment creator
-                    const fullName = rbName || cbName;
-                    
+                    const rxType: ReceiveType = dData.receiveType || 'Self';
+                    setReceiveType(rxType);
+
+                    // Name resolution depends on receive type
+                    let fullName = '';
+                    if (rxType === 'Self') {
+                        // Self pickup — owner is identified via shipment creator
+                        const cb = dData.shipmentId?.createdBy;
+                        fullName = cb
+                            ? `${cb.firstname || cb.firstName || ''} ${cb.lastname || cb.lastName || ''}`.trim()
+                            : '';
+                    } else {
+                        // VerifiedPerson / Other — use receivedBy object if present
+                        fullName = rb ? `${rb.firstname || rb.firstName || ''} ${rb.lastname || rb.lastName || ''}`.trim() : '';
+                    }
+
                     setReceivedById(rb?._id || null);
                     setReceivedBy(fullName);
                     setPhoneNumber(rb?.phoneNumber || dData.phoneNumber || '');
                     setEmail(rb?.email || dData.email || '');
-                    setReceiveType(dData.receiveType || 'Self');
                     // Normalize incoming ID types from backend
                     const rawIdType = (rb?.idType || dData.idType || 'id-card').toLowerCase();
                     let normalizedIdType: IDType = 'id-card';
-                    
+
                     if (rawIdType.includes('passport')) normalizedIdType = 'passport';
                     else if (rawIdType.includes('driving') || rawIdType.includes('licence') || rawIdType.includes('license')) normalizedIdType = 'driving-licence';
                     else if (rawIdType.includes('voter')) normalizedIdType = 'voter-card';
@@ -161,6 +169,10 @@ export default function AdminScanResultScreen() {
 
     const handleSubmit = async () => {
         setErrorMsg(null);
+        if (receiveType === 'Other' && !receivedBy.trim()) {
+            setErrorMsg("Recipient name is required.");
+            return;
+        }
         if (!idNumber.trim()) {
             setErrorMsg("ID Number is required. Please enter the recipient's ID number.");
             return;
@@ -362,7 +374,21 @@ export default function AdminScanResultScreen() {
                             </View>
                         </View>
 
-                        <LockedField label="Full Name" value={receivedBy} />
+                        {receiveType === 'Self' || receiveType === 'VerifiedPerson' ? (
+                            <LockedField label="Full Name" value={receivedBy} />
+                        ) : (
+                            <View>
+                                <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10 }} className="text-slate-400 uppercase tracking-wider mb-1.5">Full Name *</Text>
+                                <TextInput
+                                    className="bg-white dark:bg-slate-800 rounded-lg px-4 py-3.5 border border-slate-200 dark:border-slate-700"
+                                    style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 13, color: '#1e4b69' }}
+                                    placeholder="Enter recipient's full name"
+                                    placeholderTextColor="#94A3B8"
+                                    value={receivedBy}
+                                    onChangeText={setReceivedBy}
+                                />
+                            </View>
+                        )}
                         <View className="flex-row gap-4">
                             <View className="flex-1"><LockedField label="Phone Number" value={phoneNumber} /></View>
                             <View className="flex-1"><LockedField label="Email" value={email} /></View>

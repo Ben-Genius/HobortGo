@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import {
     ActivityIndicator,
     Linking,
@@ -95,10 +95,12 @@ export default function DeliveryDetailScreen() {
         }
     };
 
-    useEffect(() => {
-        if (!id) return;
-        fetchData();
-    }, [id]);
+    useFocusEffect(
+        useCallback(() => {
+            if (!id) return;
+            fetchData();
+        }, [id])
+    );
 
     const onRefresh = () => {
         setRefreshing(true);
