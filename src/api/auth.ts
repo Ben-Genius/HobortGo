@@ -7,3 +7,6 @@ export const loginAdmin = async (credentials: { email: string; password?: string
 };
 
 // other auth related endpoints can go here
+export const deleteAccount = async (): Promise<void> => {
+    await apiClient.delete('/admin-authentication/profile');
+};

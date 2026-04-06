@@ -1,4 +1,5 @@
 import { ActionSheet } from '@/src/components/ui/ActionSheet';
+import { deleteAccount } from '@/src/api/auth';
 import { useAuthStore } from '@/src/store/authStore';
 import { ThemePreference, useSettingsStore } from '@/src/store/settingsStore';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -105,6 +106,31 @@ export default function AdminSettingsScreen() {
     const initials = getInitials();
     const displayRole = role === 'super_admin' ? 'Super Admin' : 'Admin';
 
+    const handleDeleteAccount = () => {
+        Alert.alert(
+            'Delete Account',
+            'Are you sure you want to delete your account? This action is permanent and all your data will be removed.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await deleteAccount();
+                            Alert.alert('Success', 'Your account has been deleted successfully.');
+                            logout();
+                            router.replace('/(auth)/login');
+                        } catch (error) {
+                            Alert.alert('Error', 'Failed to delete account. Please try again.');
+                            console.error('Delete account error:', error);
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
     const handleLogout = () => {
         Alert.alert(
             'Log Out',
@@ -195,6 +221,14 @@ export default function AdminSettingsScreen() {
 
                     {/* Danger zone */}
                     <SectionCard>
+                        <SettingsRow
+                            icon="trash-outline"
+                            iconBg="#FFF1F2"
+                            iconColor="#E11D48"
+                            label="Delete Account"
+                            destructive
+                            onPress={handleDeleteAccount}
+                        />
                         <SettingsRow
                             icon="log-out-outline"
                             iconBg="#FFF1F2"
